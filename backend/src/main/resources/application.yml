@@ -1,0 +1,7 @@
+spring:
+  application:
+    name: Tech blog backend
+    version: v1.0
+
+selflearntech:
+  trace: false

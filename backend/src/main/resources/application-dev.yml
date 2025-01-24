@@ -1,0 +1,15 @@
+spring:
+  devtools:
+    livereload:
+      enabled: true
+  datasource:
+    url: jdbc:postgresql://localhost:5432/tech_blog
+    username: root
+    password: secret
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+
+selflearntech:
+  trace: true
