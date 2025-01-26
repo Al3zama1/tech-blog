@@ -9,7 +9,7 @@ const FeaturedPosts = () => {
             <Image src='/tech-blog/featured1.jpeg' className='rounded-3xl object-cover' w='895' />
             <div className='flex items-center gap-4'>
                 <h1 className='font-semibold lg:text-lg'>01.</h1>
-                <Link to='' className='text-blue-800 lg:text-lg'>Programming, Spring Boot, Backend</Link>
+                <Link to='' className='text-blue-800 lg:text-lg'>Spring Boot, Java</Link>
                 <span className='text-gray-500'>2 days ago</span>
             </div>
             <Link to='/test' className='text-xl lg:text-3xl font-semibold lg:font-bold'>Spring Boot Exception Handling</Link>
@@ -36,7 +36,7 @@ const FeaturedPosts = () => {
                 <div className='w-2/3'>
                     <div className='flex items-center gap-4 text-sm lg:text-base mb-4'>
                         <h1 className='font-semibold'>02.</h1>
-                        <Link to='' className='text-blue-800'>Programming</Link>
+                        <Link to='' className='text-blue-800'>Programming, Java</Link>
                         <span className='text-gray-500 text-sm'>2 days ago</span>
                     </div>
                     <Link to='/test' className='text-base sm:text-lg md:text-2xl lg:text-xl xl:text-2xl font-medium'>Data Structures and Algorithms</Link>

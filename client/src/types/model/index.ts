@@ -1,6 +1,6 @@
 export type UserType = {
     firstName: string,
-    lastname: string,
+    lastName: string,
     email: string,
     profileImg?: string,
     roles: string[]

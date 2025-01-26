@@ -13,6 +13,13 @@ import RegisterPage from './routes/RegisterPage.tsx'
 import SinglePostPage from './routes/SinglePostPage.tsx'
 import MainLayout from './layouts/MainLayout.tsx'
 import { UserProvider } from './context/AuthProvider.tsx'
+import {
+  QueryClient,
+  QueryClientProvider,
+} from '@tanstack/react-query'
+import { ToastContainer } from 'react-toastify'
+
+const queryClient = new QueryClient();
 
 const router = createBrowserRouter([
   {
@@ -49,7 +56,10 @@ const router = createBrowserRouter([
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <UserProvider>
-      <RouterProvider router={router} />
+      <QueryClientProvider client={queryClient}>
+        <RouterProvider router={router} />
+        <ToastContainer position='bottom-right' />
+      </QueryClientProvider>
     </UserProvider>
   </StrictMode>,
 )
