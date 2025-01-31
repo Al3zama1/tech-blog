@@ -26,19 +26,19 @@ public class AuthenticationController {
 
     @PostMapping("/register")
     @ResponseStatus(HttpStatus.CREATED)
-    public void registerUser(@Valid  @RequestBody UserRegistrationRequestDTO registrationPayload) {
-        authenticationService.registerUser(registrationPayload);
+    public void registerUser(@Valid  @RequestBody UserRegistrationRequestDTO payload) {
+        authenticationService.registerUser(payload);
     }
 
     @PostMapping("/authenticate")
     @ResponseStatus(HttpStatus.OK)
-    public ResponseEntity<UserDTO> authenticateUser(@Valid @RequestBody UserAuthenticationRequestDTO authenticationPayload) {
-        UserAuthenticationResponseDTO authenticationResponse = authenticationService.authenticateUser(authenticationPayload.getEmail(), authenticationPayload.getPassword());
+    public ResponseEntity<UserDTO> authenticateUser(@Valid @RequestBody UserAuthenticationRequestDTO payload) {
+        UserAuthenticationResponseDTO authenticationResponse = authenticationService.authenticateUser(payload.getEmail(), payload.getPassword());
         UserDTO userDTO = userMapper.toUserDTO(authenticationResponse);
 
         ResponseCookie refreshToken = ResponseCookie.from("refresh-token", authenticationResponse.getRefreshToken())
                 .domain("localhost") // TODO: change domain for production
-                .path("/api/v1/auth/refresh-token")
+                .path("/api/v1/auth/refresh-access")
                 .httpOnly(true)
                 .maxAge(Duration.ofDays(7))
                 .build();

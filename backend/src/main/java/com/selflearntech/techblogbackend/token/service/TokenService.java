@@ -34,12 +34,13 @@ public class TokenService implements ITokenService{
     }
 
     @Override
-    public String createRefreshToken(String subject, Instant expiresAt) {
+    public String createRefreshToken(String subject, String tokenId, Instant expiresAt) {
         JwtClaimsSet claims = JwtClaimsSet.builder()
                 .issuer("self")
                 .issuedAt(Instant.now(clock))
                 .expiresAt(expiresAt)
                 .subject(subject)
+                .claim("id", tokenId)
                 .build();
 
         return jwtEncoder.encode(JwtEncoderParameters.from(claims)).getTokenValue();

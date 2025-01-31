@@ -2,6 +2,7 @@ package com.selflearntech.techblogbackend.user.service;
 
 import com.selflearntech.techblogbackend.exception.*;
 import com.selflearntech.techblogbackend.token.model.Token;
+import com.selflearntech.techblogbackend.token.repository.TokenRepository;
 import com.selflearntech.techblogbackend.token.service.TokenService;
 import com.selflearntech.techblogbackend.user.UserMother;
 import com.selflearntech.techblogbackend.user.dto.UserAuthenticationRequestDTO;
@@ -33,10 +34,10 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 
 @ExtendWith(MockitoExtension.class)
 class AuthenticationServiceTest {
@@ -45,6 +46,8 @@ class AuthenticationServiceTest {
     private Clock clock;
     @Mock
     private UserRepository userRepository;
+    @Mock
+    private TokenRepository tokenRepository;
     @Mock
     private RoleRepository roleRepository;
     @Mock
@@ -150,8 +153,10 @@ class AuthenticationServiceTest {
             User authenticatedUser = UserMother.user().build();
             UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(authenticatedUser, null);
 
+            Token token = Token.builder().user(authenticatedUser).isValid(true).build();
             String accessToken = "access-token";
             String refreshToken = "refresh-token";
+            String refreshTokenId = "refresh-token-id";
 
             LocalDateTime defaultLocalDateTime = LocalDateTime.of(2024, 12, 13, 12, 15);
             Clock fixedClock = Clock.fixed(defaultLocalDateTime.toInstant(ZoneOffset.UTC), ZoneId.of("UTC"));
@@ -160,63 +165,34 @@ class AuthenticationServiceTest {
 
 
             given(authenticationManager.authenticate(any(AbstractAuthenticationToken.class))).willReturn(authenticationToken);
+            given(tokenRepository.save(token)).willAnswer(invocation -> {
+                Token savedToken = invocation.getArgument(0, Token.class);
+                savedToken.setId(refreshTokenId);
+                return savedToken;
+            });
             given(clock.instant()).willReturn(currentTime);
-            given(tokenService.createRefreshToken(authenticatedUser.getEmail(), refreshTokenExpiration)).willReturn(refreshToken);
+            given(tokenService.createRefreshToken(authenticatedUser.getEmail(), refreshTokenId, refreshTokenExpiration)).willReturn(refreshToken);
             given(tokenService.createAccessToken(authenticatedUser)).willReturn(accessToken);
 
             // When
             cut.authenticateUser(authenticationPayload.getEmail(), authenticationPayload.getPassword());
 
             // Then
-            ArgumentCaptor<User> userArgumentCaptor = ArgumentCaptor.forClass(User.class);
-            then(userRepository).should().save(userArgumentCaptor.capture());
+            ArgumentCaptor<Token> tokenArgumentCaptor = ArgumentCaptor.forClass(Token.class);
+            then(tokenRepository).should(times(2)).save(tokenArgumentCaptor.capture());
 
-            authenticatedUser = userArgumentCaptor.getValue();
-            assertThat(authenticatedUser).isNotNull();
-            assertThat(authenticatedUser.getToken().getRefreshToken()).isEqualTo(refreshToken);
-            assertThat(authenticatedUser.getToken().isValid()).isTrue();
-            assertThat(authenticatedUser.getToken().getExpireTime()).isEqualTo(refreshTokenExpiration);
+            token = tokenArgumentCaptor.getAllValues().get(1);
+            assertThat(token).isNotNull();
+            assertThat(token.getId()).isEqualTo(refreshTokenId);
+            assertThat(token.getRefreshToken()).isEqualTo(refreshToken);
+            assertThat(token.getExpireTime()).isEqualTo(refreshTokenExpiration);
+            assertThat(token.getUser()).isEqualTo(authenticatedUser);
+            assertThat(token.isValid()).isTrue();
 
-            then(userMapper).should().toUserAuthenticationResponseDTO(any(), eq(accessToken));
-        }
-
-        @Test
-        void authenticateUser_OnSubsequentLoginReuseTokenWithDifferentValue_ShouldReturnAuthenticationResponseDTO() {
-            // Given
-            UserAuthenticationRequestDTO authenticationPayload = UserMother.userAuthenticationPayload().build();
-            User authenticatedUser = UserMother.user().token(new Token()).build();
-            UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(authenticatedUser, null);
-
-            String accessToken = "access-token";
-            String refreshToken = "refresh-token";
-
-            LocalDateTime defaultLocalDateTime = LocalDateTime.of(2024, 12, 13, 12, 15);
-            Clock fixedClock = Clock.fixed(defaultLocalDateTime.toInstant(ZoneOffset.UTC), ZoneId.of("UTC"));
-            Instant currentTime = fixedClock.instant();
-            Instant refreshTokenExpiration = fixedClock.instant().plus(7, ChronoUnit.DAYS);
-
-
-            given(authenticationManager.authenticate(any(AbstractAuthenticationToken.class))).willReturn(authenticationToken);
-            given(clock.instant()).willReturn(currentTime);
-            given(tokenService.createRefreshToken(authenticatedUser.getEmail(), refreshTokenExpiration)).willReturn(refreshToken);
-            given(tokenService.createAccessToken(authenticatedUser)).willReturn(accessToken);
-
-            // When
-            cut.authenticateUser(authenticationPayload.getEmail(), authenticationPayload.getPassword());
-
-            // Then
-            ArgumentCaptor<User> userArgumentCaptor = ArgumentCaptor.forClass(User.class);
-            then(userRepository).should().save(userArgumentCaptor.capture());
-
-            authenticatedUser = userArgumentCaptor.getValue();
-            assertThat(authenticatedUser).isNotNull();
-            assertThat(authenticatedUser.getToken().getRefreshToken()).isEqualTo(refreshToken);
-            assertThat(authenticatedUser.getToken().isValid()).isTrue();
-            assertThat(authenticatedUser.getToken().getExpireTime()).isEqualTo(refreshTokenExpiration);
-
-            then(userMapper).should().toUserAuthenticationResponseDTO(any(), eq(accessToken));
+            then(userMapper).should().toUserAuthenticationResponseDTO(authenticatedUser, refreshToken, accessToken);
         }
     }
+
 
     @Nested
     class RefreshAccessToken {
@@ -232,32 +208,35 @@ class AuthenticationServiceTest {
             String refreshToken = "refresh-token";
             String accessToken = "access-token";
             Token token = Token.builder()
+                    .id("refresh-token-id")
                     .refreshToken(refreshToken)
                     .expireTime(refreshTokenExpiration)
                     .isValid(true)
+                    .user(UserMother.user().build())
                     .build();
-            User user = UserMother.user().token(token).build();
+
             Jwt jwt = Jwt.withTokenValue(refreshToken)
                     .expiresAt(refreshTokenExpiration)
-                    .subject(user.getEmail())
+                    .subject(token.getUser().getEmail())
+                    .claim("id", token.getId())
                     .header("alg", "SH252")
                     .build();
 
             given(tokenService.validateJWT(refreshToken)).willReturn(jwt);
-            given(userRepository.findByEmail(user.getEmail())).willReturn(Optional.of(user));
+            given(tokenRepository.findById(token.getId())).willReturn(Optional.of(token));
             given(clock.instant()).willReturn(currentTime);
-            given(tokenService.createAccessToken(user)).willReturn(accessToken);
+            given(tokenService.createAccessToken(token.getUser())).willReturn(accessToken);
 
             // When
             cut.refreshAccessToken(refreshToken);
 
             // Then
-            then(tokenService).should().createAccessToken(user);
-            then(userMapper).should().toUserDTO(user, accessToken);
+            then(tokenService).should().createAccessToken(token.getUser());
+            then(userMapper).should().toUserDTO(token.getUser(), accessToken);
         }
 
         @Test
-        void refreshAccessToken_WithTokenValidationException_ShouldThrowRefreshAccessTokenException() {
+        void refreshAccessToken_WithTokenValidationException_ShouldThrowRefreshTokenException() {
             // Given
             String refreshToken = "refresh-token";
 
@@ -266,7 +245,7 @@ class AuthenticationServiceTest {
             // When
             assertThatThrownBy(() -> cut.refreshAccessToken(refreshToken))
                     .isInstanceOf(RefreshTokenException.class)
-                    .hasMessage(ErrorMessages.INVALID_REFRESH_TOKEN + ": " + ErrorMessages.FAILED_TOKEN_DECODE);
+                    .hasMessage(ErrorMessages.FAILED_TOKEN_DECODE);
 
             // Then
             then(userRepository).shouldHaveNoInteractions();
@@ -275,22 +254,24 @@ class AuthenticationServiceTest {
         }
 
         @Test
-        void refreshAccessToken_WithNonExistingSubject_ShouldThrowRefreshAccessTokenException() {
+        void refreshAccessToken_WithNonMatchingTokenId_ShouldThrowRefreshTokenException() {
             // Given
+
             String refreshToken = "refresh-token";
             String subject = "john.doe@gmail.com";
             Jwt jwt = Jwt.withTokenValue(refreshToken)
                     .subject(subject)
+                    .claim("id", "refresh-token-id")
                     .header("alg", "SH252")
                     .build();
 
             given(tokenService.validateJWT(refreshToken)).willReturn(jwt);
-            given(userRepository.findByEmail(subject)).willReturn(Optional.empty());
+            given(tokenRepository.findById(jwt.getClaim("id"))).willReturn(Optional.empty());
 
             // When
             assertThatThrownBy(() -> cut.refreshAccessToken(refreshToken))
                     .isInstanceOf(RefreshTokenException.class)
-                    .hasMessage(ErrorMessages.TOKEN_SUBJECT_DOES_NOT_LINK_TO_USER);
+                    .hasMessage(ErrorMessages.REFRESH_TOKEN_NOT_FOUND);
 
             // Then
             then(tokenService).shouldHaveNoMoreInteractions();
@@ -298,7 +279,7 @@ class AuthenticationServiceTest {
         }
 
         @Test
-        void refreshAccessToken_WithInvalidatedToken_ShouldThrowRefreshAccessTokenException() {
+        void refreshAccessToken_WithCookieAndStoredRefreshTokenUserMismatch_ShouldThrowRefreshTokenException() {
             // Given
             LocalDateTime defaultLocalDateTime = LocalDateTime.of(2024, 12, 13, 12, 15);
             Clock fixedClock = Clock.fixed(defaultLocalDateTime.toInstant(ZoneOffset.UTC), ZoneId.of("UTC"));
@@ -307,33 +288,75 @@ class AuthenticationServiceTest {
 
             String refreshToken = "refresh-token";
             Token token = Token.builder()
+                    .id("refresh-token-id")
                     .refreshToken(refreshToken)
                     .expireTime(refreshTokenExpiration)
-                    .isValid(false)
+                    .isValid(true)
+                    .user(UserMother.user().build())
                     .build();
-            User user = UserMother.user().token(token).build();
+
             Jwt jwt = Jwt.withTokenValue(refreshToken)
                     .expiresAt(refreshTokenExpiration)
-                    .subject(user.getEmail())
+                    .subject("john@gmail.com")
+                    .claim("id", token.getId())
                     .header("alg", "SH252")
                     .build();
 
             given(tokenService.validateJWT(refreshToken)).willReturn(jwt);
-            given(userRepository.findByEmail(user.getEmail())).willReturn(Optional.of(user));
+            given(tokenRepository.findById(token.getId())).willReturn(Optional.of(token));
             given(clock.instant()).willReturn(currentTime);
 
             // When
             assertThatThrownBy(() -> cut.refreshAccessToken(refreshToken))
                     .isInstanceOf(RefreshTokenException.class)
-                    .hasMessage(ErrorMessages.INVALID_REFRESH_TOKEN + ": " + ErrorMessages.INVALIDATED_REFRESH_TOKEN);
+                    .hasMessage(ErrorMessages.STORED_TOKEN_AND_COOKIE_REFRESH_TOKEN_USER_MISMATCH);
 
             // Then
-            then(tokenService).should(never()).createAccessToken(user);
+            then(tokenService).shouldHaveNoMoreInteractions();
             then(userMapper).shouldHaveNoInteractions();
         }
 
         @Test
-        void refreshAccessToken_WithCookieAndDatabaseTokenNotMatching_ShouldThrowRefreshAccessTokenException() {
+        void refreshAccessToken_WithInvalidatedToken_ShouldThrowRefreshTokenException() {
+            // Given
+            LocalDateTime defaultLocalDateTime = LocalDateTime.of(2024, 12, 13, 12, 15);
+            Clock fixedClock = Clock.fixed(defaultLocalDateTime.toInstant(ZoneOffset.UTC), ZoneId.of("UTC"));
+            Instant currentTime = fixedClock.instant();
+            Instant refreshTokenExpiration = fixedClock.instant().plus(7, ChronoUnit.DAYS);
+
+            String refreshToken = "refresh-token";
+            String accessToken = "access-token";
+            Token token = Token.builder()
+                    .id("refresh-token-id")
+                    .refreshToken(refreshToken)
+                    .expireTime(refreshTokenExpiration)
+                    .isValid(false)
+                    .user(UserMother.user().build())
+                    .build();
+
+            Jwt jwt = Jwt.withTokenValue(refreshToken)
+                    .expiresAt(refreshTokenExpiration)
+                    .subject(token.getUser().getEmail())
+                    .claim("id", token.getId())
+                    .header("alg", "SH252")
+                    .build();
+
+            given(tokenService.validateJWT(refreshToken)).willReturn(jwt);
+            given(tokenRepository.findById(token.getId())).willReturn(Optional.of(token));
+            given(clock.instant()).willReturn(currentTime);
+
+            // When
+            assertThatThrownBy(() -> cut.refreshAccessToken(refreshToken))
+                    .isInstanceOf(RefreshTokenException.class)
+                    .hasMessage(ErrorMessages.INVALIDATED_REFRESH_TOKEN);
+
+            // Then
+            then(tokenService).shouldHaveNoMoreInteractions();
+            then(userMapper).shouldHaveNoInteractions();
+        }
+
+        @Test
+        void refreshAccessToken_WithCookieAndDatabaseTokenNotMatching_ShouldThrowRefreshTokenException() {
             // Given
             LocalDateTime defaultLocalDateTime = LocalDateTime.of(2024, 12, 13, 12, 15);
             Clock fixedClock = Clock.fixed(defaultLocalDateTime.toInstant(ZoneOffset.UTC), ZoneId.of("UTC"));
@@ -342,28 +365,31 @@ class AuthenticationServiceTest {
 
             String refreshToken = "refresh-token";
             Token token = Token.builder()
+                    .id("refresh-token-id")
                     .refreshToken("different-refresh-token")
                     .expireTime(refreshTokenExpiration)
                     .isValid(true)
+                    .user(UserMother.user().build())
                     .build();
-            User user = UserMother.user().token(token).build();
+
             Jwt jwt = Jwt.withTokenValue(refreshToken)
                     .expiresAt(refreshTokenExpiration)
-                    .subject(user.getEmail())
+                    .subject(token.getUser().getEmail())
+                    .claim("id", token.getId())
                     .header("alg", "SH252")
                     .build();
 
             given(tokenService.validateJWT(refreshToken)).willReturn(jwt);
-            given(userRepository.findByEmail(user.getEmail())).willReturn(Optional.of(user));
+            given(tokenRepository.findById(token.getId())).willReturn(Optional.of(token));
             given(clock.instant()).willReturn(currentTime);
 
             // When
             assertThatThrownBy(() -> cut.refreshAccessToken(refreshToken))
                     .isInstanceOf(RefreshTokenException.class)
-                    .hasMessage(ErrorMessages.INVALID_REFRESH_TOKEN + ": " + ErrorMessages.COOKIE_REFRESH_TOKEN_AND_DB_TOKEN_MISMATCH);
+                    .hasMessage(ErrorMessages.COOKIE_REFRESH_TOKEN_AND_DB_TOKEN_MISMATCH);
 
             // Then
-            then(tokenService).should(never()).createAccessToken(user);
+            then(tokenService).shouldHaveNoMoreInteractions();
             then(userMapper).shouldHaveNoInteractions();
         }
 
@@ -377,31 +403,34 @@ class AuthenticationServiceTest {
 
             String refreshToken = "refresh-token";
             Token token = Token.builder()
+                    .id("refresh-token-id")
                     .refreshToken(refreshToken)
                     .expireTime(currentTime.minusSeconds(100))
                     .isValid(true)
+                    .user(UserMother.user().build())
                     .build();
-            User user = UserMother.user().token(token).build();
+
             Jwt jwt = Jwt.withTokenValue(refreshToken)
                     .expiresAt(refreshTokenExpiration)
-                    .subject(user.getEmail())
+                    .subject(token.getUser().getEmail())
+                    .claim("id", token.getId())
                     .header("alg", "SH252")
                     .build();
 
             given(tokenService.validateJWT(refreshToken)).willReturn(jwt);
-            given(userRepository.findByEmail(user.getEmail())).willReturn(Optional.of(user));
+            given(tokenRepository.findById(token.getId())).willReturn(Optional.of(token));
             given(clock.instant()).willReturn(currentTime);
 
             // When
             assertThatThrownBy(() -> cut.refreshAccessToken(refreshToken))
                     .isInstanceOf(RefreshTokenException.class)
-                    .hasMessage(ErrorMessages.INVALID_REFRESH_TOKEN + ": " + ErrorMessages.EXPIRED_REFRESH_TOKEN);
+                    .hasMessage(ErrorMessages.EXPIRED_REFRESH_TOKEN);
 
             // Then
-            then(tokenService).should(never()).createAccessToken(user);
+            then(tokenService).shouldHaveNoMoreInteractions();
             then(userMapper).shouldHaveNoInteractions();
-        }
 
+        }
     }
 
 }

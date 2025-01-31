@@ -2,6 +2,7 @@ package com.selflearntech.techblogbackend.user.service;
 
 import com.selflearntech.techblogbackend.exception.*;
 import com.selflearntech.techblogbackend.token.model.Token;
+import com.selflearntech.techblogbackend.token.repository.TokenRepository;
 import com.selflearntech.techblogbackend.token.service.TokenService;
 import com.selflearntech.techblogbackend.user.dto.UserAuthenticationResponseDTO;
 import com.selflearntech.techblogbackend.user.dto.UserDTO;
@@ -20,17 +21,20 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Clock;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Set;
 
+@Transactional
 @Service
 @RequiredArgsConstructor
 public class AuthenticationService implements IAuthenticationService{
 
     private final UserRepository userRepository;
+    private final TokenRepository tokenRepository;
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
@@ -65,31 +69,22 @@ public class AuthenticationService implements IAuthenticationService{
                 new UsernamePasswordAuthenticationToken(email, password)
         );
 
-        User AuthenticatedUser = (User) authentication.getPrincipal();
-        String accessToken = tokenService.createAccessToken(AuthenticatedUser);
+        User authenticatedUser = (User) authentication.getPrincipal();
+        Token token = Token.builder()
+                .user(authenticatedUser)
+                .isValid(true)
+                .build();
+        token = tokenRepository.save(token);
+
+        String accessToken = tokenService.createAccessToken(authenticatedUser);
         Instant refreshTokenExpiration = Instant.now(clock).plus(7, ChronoUnit.DAYS);
-        String refreshToken = tokenService.createRefreshToken(AuthenticatedUser.getEmail(), refreshTokenExpiration);
+        String refreshToken = tokenService.createRefreshToken(authenticatedUser.getEmail(), token.getId(), refreshTokenExpiration);
 
-        Token token;
+        token.setRefreshToken(refreshToken);
+        token.setExpireTime(refreshTokenExpiration);
+        tokenRepository.save(token);
 
-        if (AuthenticatedUser.getToken() == null) {
-            token = Token.builder()
-                    .user(AuthenticatedUser)
-                    .refreshToken(refreshToken)
-                    .expireTime(refreshTokenExpiration)
-                    .isValid(true)
-                    .build();
-        } else {
-            token = AuthenticatedUser.getToken();
-            token.setValid(true);
-            token.setRefreshToken(refreshToken);
-            token.setExpireTime(refreshTokenExpiration);
-        }
-
-        AuthenticatedUser.setToken(token);
-        AuthenticatedUser = userRepository.save(AuthenticatedUser);
-
-        return userMapper.toUserAuthenticationResponseDTO(AuthenticatedUser, accessToken);
+        return userMapper.toUserAuthenticationResponseDTO(authenticatedUser, refreshToken, accessToken);
     }
 
     @Override
@@ -99,20 +94,19 @@ public class AuthenticationService implements IAuthenticationService{
         try {
             decodedJwt = tokenService.validateJWT(refreshToken);
         } catch (JwtException ex) {
-            throw new RefreshTokenException(ErrorMessages.INVALID_REFRESH_TOKEN + ": " + ErrorMessages.FAILED_TOKEN_DECODE);
+            throw new RefreshTokenException(ErrorMessages.FAILED_TOKEN_DECODE);
         }
 
-        String email = decodedJwt.getSubject();
-        User userLinkedToRefreshToken = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RefreshTokenException(ErrorMessages.TOKEN_SUBJECT_DOES_NOT_LINK_TO_USER));
-        Token storedUserToken = userLinkedToRefreshToken.getToken();
+        Token storedRefreshToken = tokenRepository.findById(decodedJwt.getClaim("id"))
+                .orElseThrow(() -> new RefreshTokenException(ErrorMessages.REFRESH_TOKEN_NOT_FOUND));
         Instant now = Instant.now(clock);
 
-        if (!storedUserToken.isValid()) throw new RefreshTokenException(ErrorMessages.INVALID_REFRESH_TOKEN + ": " + ErrorMessages.INVALIDATED_REFRESH_TOKEN);
-        if (!storedUserToken.getRefreshToken().equals(refreshToken)) throw new RefreshTokenException(ErrorMessages.INVALID_REFRESH_TOKEN + ": " + ErrorMessages.COOKIE_REFRESH_TOKEN_AND_DB_TOKEN_MISMATCH);
-        if (storedUserToken.getExpireTime().isBefore(now)) throw new RefreshTokenException(ErrorMessages.INVALID_REFRESH_TOKEN + ": " + ErrorMessages.EXPIRED_REFRESH_TOKEN);
+        if (!storedRefreshToken.getUser().getEmail().equals(decodedJwt.getSubject())) throw new RefreshTokenException(ErrorMessages.STORED_TOKEN_AND_COOKIE_REFRESH_TOKEN_USER_MISMATCH);
+        if (!storedRefreshToken.isValid()) throw new RefreshTokenException(ErrorMessages.INVALIDATED_REFRESH_TOKEN);
+        if (!storedRefreshToken.getRefreshToken().equals(refreshToken)) throw new RefreshTokenException(ErrorMessages.COOKIE_REFRESH_TOKEN_AND_DB_TOKEN_MISMATCH);
+        if (storedRefreshToken.getExpireTime().isBefore(now)) throw new RefreshTokenException(ErrorMessages.EXPIRED_REFRESH_TOKEN);
 
-        String newAccessToken = tokenService.createAccessToken(userLinkedToRefreshToken);
-        return userMapper.toUserDTO(userLinkedToRefreshToken, newAccessToken);
+        String newAccessToken = tokenService.createAccessToken(storedRefreshToken.getUser());
+        return userMapper.toUserDTO(storedRefreshToken.getUser(), newAccessToken);
     }
 }

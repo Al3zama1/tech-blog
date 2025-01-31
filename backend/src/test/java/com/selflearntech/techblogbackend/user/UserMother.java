@@ -48,7 +48,7 @@ public class UserMother {
 
     public static User.UserBuilder user() {
         return User.builder()
-                .id(1)
+                .id("64f57b8a18c4a1a5f9f8c671")
                 .firstName("John")
                 .lastName("Last")
                 .profileImg("")

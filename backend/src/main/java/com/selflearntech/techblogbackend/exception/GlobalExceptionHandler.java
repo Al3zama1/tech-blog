@@ -45,7 +45,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(RefreshTokenException.class)
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
-    public ResponseEntity<Object> handleRefreshTokenException(RefreshTokenException ex, WebRequest request) {
+    public ResponseEntity<Object> handleRefreshTokenException(RefreshTokenException ex) {
         log.info(ex.getMessage(), ex);
 
         ErrorResponse errorResponse = new ErrorResponse(HttpStatus.UNAUTHORIZED.value(), ErrorMessages.INVALID_REFRESH_TOKEN);

@@ -1,6 +1,5 @@
 package com.selflearntech.techblogbackend.user.mapper;
 
-import com.selflearntech.techblogbackend.token.model.Token;
 import com.selflearntech.techblogbackend.user.UserMother;
 import com.selflearntech.techblogbackend.user.dto.UserAuthenticationResponseDTO;
 import com.selflearntech.techblogbackend.user.dto.UserDTO;
@@ -42,15 +41,15 @@ class UserMapperTest {
     }
 
     @Test
-    void toUserAuthenticationResponseDTOFromUserAndAccessToken() {
+    void toUserAuthenticationResponseDTOFromUserAndRefreshTokenAndAccessToken() {
         // Given
-        Token refreshToken = Token.builder().refreshToken("refresh-token").build();
-        Role userRole = new Role(1, RoleType.USER);
-        User user = UserMother.user().token(refreshToken).authorities(Set.of(userRole)).build();
+        Role userRole = new Role("role-id", RoleType.USER);
+        User user = UserMother.user().authorities(Set.of(userRole)).build();
         String accessToken = "access-token";
+        String refreshToken = "refresh-token";
 
         // When
-        UserAuthenticationResponseDTO authenticationResponse = cut.toUserAuthenticationResponseDTO(user, accessToken);
+        UserAuthenticationResponseDTO authenticationResponse = cut.toUserAuthenticationResponseDTO(user, refreshToken, accessToken);
         Set<String> userRoles = cut.getRoles(user);
 
         // Then
@@ -59,14 +58,14 @@ class UserMapperTest {
         assertThat(authenticationResponse.getEmail()).isEqualTo(user.getEmail());
         assertThat(authenticationResponse.getProfileImg()).isEqualTo(user.getProfileImg());
         assertThat(authenticationResponse.getRoles()).isEqualTo(userRoles);
-        assertThat(authenticationResponse.getRefreshToken()).isEqualTo(user.getToken().getRefreshToken());
+        assertThat(authenticationResponse.getRefreshToken()).isEqualTo(refreshToken);
         assertThat(authenticationResponse.getAccessToken()).isEqualTo(accessToken);
     }
 
     @Test
     void toUserDTOFromUserAndAccessToken() {
         // Given
-        Role userRole = new Role(1, RoleType.USER);
+        Role userRole = new Role("role-id", RoleType.USER);
         User user = UserMother.user().authorities(Set.of(userRole)).build();
         String accessToken = "access-token";
 
@@ -86,8 +85,8 @@ class UserMapperTest {
     @Test
     void getRolesFromUserAuthorities() {
         // Given
-        Role userRole = new Role(1, RoleType.USER);
-        Role adminRole = new Role(2, RoleType.ADMIN);
+        Role userRole = new Role("role-1", RoleType.USER);
+        Role adminRole = new Role("role-2", RoleType.ADMIN);
         User user = UserMother.user().authorities(Set.of(userRole, adminRole)).build();
 
         // When

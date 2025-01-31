@@ -156,7 +156,7 @@ class AuthenticationControllerTest {
                     .andExpect(cookie().value("refresh-token", authenticationResponse.getRefreshToken()))
                     .andExpect(cookie().httpOnly("refresh-token", true))
 //                    .andExpect(cookie().domain("refresh-token", "localhost"))
-                    .andExpect(cookie().path("refresh-token", "/api/v1/auth/refresh-token"));
+                    .andExpect(cookie().path("refresh-token", "/api/v1/auth/refresh-access"));
 
             // Then
             then(authenticationService).should().authenticateUser(authenticationPayload.getEmail(), authenticationPayload.getPassword());

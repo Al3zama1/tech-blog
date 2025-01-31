@@ -9,7 +9,7 @@ public interface ITokenService {
 
     String createAccessToken(User user);
 
-    String createRefreshToken(String subject, Instant expiresAt);
+    String createRefreshToken(String subject, String tokenId, Instant expiresAt);
 
     Jwt validateJWT(String token);
 }

@@ -1,13 +1,26 @@
 version: '3.9'
 
 services:
-  postgres:
-    image: postgres:15.1
-    container_name: postgres_container
-    restart: always
+  mongodb:
+    image: mongo:6.0
+    container_name: mongodb
     ports:
-      - "5432:5432"
+      - "27017:27017"
+#    volumes:
+#      - mongodb_data:/data/db
     environment:
-      POSTGRES_USER: root
-      POSTGRES_PASSWORD: secret
-      POSTGRES_DB: tech_blog
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password
+#  postgres:
+#    image: postgres:15.1
+#    container_name: postgres_container
+#    restart: always
+#    ports:
+#      - "5432:5432"
+#    environment:
+#      POSTGRES_USER: root
+#      POSTGRES_PASSWORD: secret
+#      POSTGRES_DB: tech_blog
+
+#volumes:
+#  mongodb_data: # Named volume for MongoDB data persistence
