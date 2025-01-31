@@ -18,6 +18,8 @@ import {
   QueryClientProvider,
 } from '@tanstack/react-query'
 import { ToastContainer } from 'react-toastify'
+import RequireAuth from './components/RequireAuth.tsx'
+import Unauthorized from './components/Unauthorized.tsx'
 
 const queryClient = new QueryClient();
 
@@ -39,7 +41,7 @@ const router = createBrowserRouter([
       },
       {
         path: "/write",
-        element: <WritePage />
+        element: <RequireAuth allowedRoles={['USER']} />
       },
       {
         path: "/login",
@@ -48,6 +50,10 @@ const router = createBrowserRouter([
       {
         path: "/register",
         element: <RegisterPage />
+      },
+      {
+        path: "/unauthorized",
+        element: <Unauthorized />
       }
     ]
   }
@@ -55,11 +61,11 @@ const router = createBrowserRouter([
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <UserProvider>
-      <QueryClientProvider client={queryClient}>
+    <QueryClientProvider client={queryClient}>
+      <UserProvider>
         <RouterProvider router={router} />
         <ToastContainer position='bottom-right' />
-      </QueryClientProvider>
-    </UserProvider>
+      </UserProvider>
+    </QueryClientProvider>
   </StrictMode>,
 )
