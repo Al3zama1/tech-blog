@@ -1,48 +1,71 @@
 import React, { RefObject, useEffect, useRef, useState } from 'react'
+import Upload from '@/components/Upload';
+import useAxiosPrivate from '@/hooks/useAxiosPrivate';
+import { DraftType, ImageType } from '@/types/model';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import hljs from 'highlight.js';
+import 'highlight.js/styles/base16/edge-light.css'
+import Quill, { Delta } from 'quill';
 import "quill/dist/quill.snow.css"
-import hljs from 'highlight.js'
+import { useNavigate, useParams } from 'react-router-dom';
+import { toast } from 'react-toastify';
+import Image from '@/components/Image';
+import { axiosPrivate } from '@/api/axios';
 
-import "highlight.js/styles/base16/gruvbox-dark-pale.css"
-// import 'highlight.js/styles/base16/harmonic16-light.css'
-// import 'highlight.js/styles/base16/papercolor-light.css'
+// TODO: FIX SAVED CONTENT BEING OUT OF SYNC WITH ACTUAL CLIENT CONTENT.
 
-// import 'highlight.js/styles/qtcreator-light.css'
-
-// import 'highlight.js/styles/ascetic.css'
-// import 'highlight.js/styles/vs.css'
-
-// import 'highlight.js/styles/github.css'
-
-// import 'highlight.js/styles/base16/github.css'
-// import 'highlight.js/styles/base16/grayscale-light.css'
-// import 'highlight.js/styles/base16/papercolor-dark.css'
-// import 'highlight.js/styles/base16/edge-light.css'
-// import 'highlight.js/styles/arduino-light.min.css'
-// import 'highlight.js/styles/atom-one-dark-reasonable.min.css'
-
-import useAuth from '../hooks/UseAuth'
-import Quill from 'quill';
-import { useMutation } from '@tanstack/react-query'
-import useAxiosPrivate from '../hooks/useAxiosPrivate'
-import { data, useNavigate } from 'react-router-dom'
-import { toast } from 'react-toastify'
-import { IKContext, IKUpload } from 'imagekitio-react'
-import Upload from '../components/Upload'
 
 
 const WritePage = () => {
-
-    const {isLoaded, accessToken} = useAuth();
+  
     const axiosPrivate = useAxiosPrivate();
-
     const navigate = useNavigate();
+    const { draftId } = useParams();
 
     const [quill, setQuill] = useState<Quill>()
-    const [coverImg, setCoverImg] = useState('')
+    const editorRef: RefObject<any> = useRef();
+    const unsavedChangesRef = useRef(0);
+    
     const [uploadProgress, setUploadProgress] = useState(0)
     const [editorLoaded, setEditorLoaded] = useState(false)
-    const editorRef: RefObject<any> = useRef();
+    const [contentChanged, setContentChanged] = useState(false);    
 
+    const [title, setTitle] = useState('');
+    const [coverImg, setCoverImg] = useState<ImageType | null>(null)
+    const [description, setDescription] = useState('');
+    const [category, setCategory] = useState('general');
+
+    
+    const {isPending: savingDraft, isSuccess: draftSaved, mutate: saveDraftMutation} = useMutation({
+        mutationFn: (payload: DraftType) => {
+            return axiosPrivate.put(`/drafts/${draftId}`, payload)
+        },
+        onSuccess: () => {
+            setContentChanged(false)
+        },
+        onError: () => {
+            toast.error("Failed to save changes...")
+        }
+    })
+
+
+    // const {isPending: pendingDraftSave, isSuccess: draftSaved, mutate: saveDraft} = useMutation({
+    //     mutationFn: (payload: DraftType) => {
+    //         console.log(payload.description)
+    //         unsavedChangesRef.current = 0;
+    //         return axiosPrivate.put(`draft/${draftId}`, payload)
+    //     },
+    //     onSuccess: () => {
+    //         console.log(unsavedChangesRef.current)
+    //         if (unsavedChangesRef.current === 0) setContentChanged(false);
+    //     },
+    //     onError: () => {
+    //         toast.error("Failed to save changes...")
+    //     }
+    // })
+
+
+    // Load quill
     useEffect(() => {
         if (editorRef && !quill && editorLoaded) {
             const quill = new Quill(editorRef.current, {
@@ -53,16 +76,55 @@ const WritePage = () => {
                 },
                 theme: 'snow'
             })
+
+            quill.on('text-change', () => {
+                setContentChanged(true)
+            });
             setQuill(quill)
+            
         }
 
         setEditorLoaded(true)
 
     }, [quill, editorLoaded])
 
-    const mutation = useMutation({
-        mutationFn: newArticle => {
-            return axiosPrivate.post('/articles', newArticle);
+
+    useEffect(() => {
+        const preventReloadOnUnsavedContent = window.onbeforeunload = () => {
+            if (contentChanged) {
+                return "There are unsaved changes. Are you sure you want to leave?"
+            }
+        }
+
+        return () => {
+            removeEventListener('beforeunload', preventReloadOnUnsavedContent)
+        }
+    }, [contentChanged])
+
+
+    // Load previous changes
+    useEffect(() => {
+        if (!quill) return;
+
+        const fetchDraft = async () =>  {
+            const res = await axiosPrivate.get(`/drafts/${draftId}`);
+            const draft:  DraftType = res.data;
+
+            setCoverImg(draft.coverImg)
+            setTitle(draft.title)
+            setCategory(draft.category.replace(" ", "-"))
+            setDescription(draft.description)
+            quill.setContents(JSON.parse(draft.content), 'user');
+            setContentChanged(false)
+        }
+
+        fetchDraft();
+
+    }, [quill])
+
+    const publishMutation = useMutation({
+        mutationFn: (draftId: string ) => {
+            return axiosPrivate.post(`/drafts/${draftId}/publish`);
         },
         onSuccess: res => {
             toast.success('Article has been published')
@@ -70,39 +132,58 @@ const WritePage = () => {
         }
     })
 
-    // if (!isLoaded) return <div>Loading...</div>
+    const saveDraft = () => {
+        const editContent : DraftType = {
+            content: JSON.stringify(quill?.getContents()),
+            title: title,
+            description: description,
+            coverImg: coverImg,
+            category: category,
+        } 
+        
+        saveDraftMutation(editContent);
+    }
 
-    // if (isLoaded && !accessToken) return <div>You should login!</div>
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        const formData = new FormData(e.target);
-
-        const data = {
-            title: formData.get('title'),
-            img: coverImg.filePath,
-            category: formData.get('category'),
-            description: formData.get('description'),
-            content: quill?.getContents()
+        if (typeof draftId === 'string') {
+            publishMutation.mutate(draftId);
         }
-
-        console.log(data)
-        mutation.mutate(data);
+       
     };
+
+    const handleFormChange = (e) => {
+        const target = e.target;
+        if (target?.accept === "image/*") return;
+        setContentChanged(true) 
+    }
 
     
     
   return (
     <div className='h-[calc(100vh-64px)] md:h-[calc(100vh-80px)] flex flex-col gap-6'>
-        <h1 className='text-xl font-light'>Create a New Post</h1>
-        <form onSubmit={handleSubmit} className='flex flex-col gap-6 flex-1 mb-6'>
-            <Upload type="image" setProgress={setUploadProgress} setData={setCoverImg}>
-                <button className='w-max p-2 shadow-md rounded-xl text-sm text-gray-500 bg-white'>Add a cover image</button>
-            </Upload>
-            <input className='text-4xl font-semibold bg-transparent outline-none' type="text" placeholder='A Great Story' name='title' />
+        <div className='flex items-end gap-5'>
+            <h1 className='text-xl font-light'>Create a New Post</h1>
+            <span className={`text-gray-400 transition-all delay-300`}>
+                {savingDraft && 'Saving ...'}
+                {draftSaved && !contentChanged && 'Saved'}
+            </span>
+        </div>
+        <form onChange={handleFormChange} onSubmit={handleSubmit} className='flex flex-col gap-6 flex-1 mb-6'>
+            <div className='flex items-center gap-10'>
+                <Upload type="image" setProgress={setUploadProgress} data={coverImg} setData={setCoverImg} setContentChanged={setContentChanged}>
+                    <button name='coverImg' type='button' className='p-2 shadow-md rounded-xl text-sm text-gray-500 bg-white'>Add a cover image</button>
+                </Upload>
+                {/* {coverImg && <img src={coverImg.url} alt='Article cover image' className='w-20' />} */}
+                {coverImg && <Image key={coverImg.name} src={coverImg.filePath} w='200' className='rounded-2xl' />}
+                {/* {coverImg && <img src={coverImg.url} className='w-[200px] rounded-2xl' />} */}
+            </div>
+            
+            <input value={title} onChange={(e) => setTitle(e.target.value)} className='text-4xl font-semibold bg-transparent outline-none' type="text" placeholder='A Great Story' name='title' />
             <div className='flex items-center gap-4'>
                 <label htmlFor="" className='text-sm'>Choose a category:</label>
-                <select name="category" id="" className='p-2 rounded-xl bg-white shadow-md'>
+                <select value={category} onChange={(e) => setCategory(e.target.value)} name="category" id="" className='p-2 rounded-xl bg-white shadow-md'>
                     <option value="general">General</option>
                     <option value="programming">Programming</option>
                     <option value="Algorithms">Algorithms</option>
@@ -111,8 +192,8 @@ const WritePage = () => {
                     <option value="spring-boot">Spring Boot</option>
                 </select>
             </div>
-            <textarea className='p-4 rounded-xl bg-white shadow-md' name="description" placeholder='A Short Description' />
-            {/* <ReactQuill theme="snow" modules={{syntax: hljs, }} className='flex-1 rounded-xl bg-white shadow-md' /> */}
+            <textarea value={description} onChange={(e) => setDescription(e.target.value)} className='p-4 rounded-xl bg-white shadow-md' name="description" placeholder='A Short Description' />
+            
             <div id='toolbar'>
                 <span className="ql-formats">
                     <button className="ql-header" value='1'></button>
@@ -138,18 +219,31 @@ const WritePage = () => {
                     <button className="ql-image"></button>
                 </span>
             </div>
+
             {/* <div className='flex flex-1'>
                 <div className='flex flex-col gap-2 mr-2'>
                     <div>🌄</div>
                     <div>▶️</div>
                 </div> */}
-                <div ref={editorRef} className='flex-1 rounded-xl bg-white shadow-md'></div>
+                {/* <div ref={editorRef} className='flex-1 rounded-xl bg-white shadow-md'></div> */}
             {/* </div> */}
-            <button disabled={mutation.isPending || (uploadProgress > 0 && uploadProgress < 100)} className='bg-blue-800 text-white font-medium rounded-xl mt-4 p-2 w-36 disabled:bg-blue-400 disabled:cursor-not-allowed'>
-                {mutation.isPending ? 'Publishing' : 'Publish'}
-            </button>
+
+            <div ref={editorRef} className='flex-1 rounded-xl bg-white shadow-md'></div>
+
+
+            <div className='flex gap-4'>
+                <button onClick={saveDraft} type='button' disabled={!contentChanged || (uploadProgress > 0 && uploadProgress < 100)} className='bg-blue-800 text-white font-medium rounded-xl mt-4 p-2 w-36 disabled:bg-blue-400 disabled:cursor-not-allowed'>
+                    {savingDraft ? 'Saving' : 'Save'}
+                </button>
+                <button type='submit' disabled={publishMutation.isPending || (uploadProgress > 0 && uploadProgress < 100) || contentChanged} className='bg-blue-800 text-white font-medium rounded-xl mt-4 p-2 w-36 disabled:bg-blue-400 disabled:cursor-not-allowed'>
+                    {publishMutation.isPending ? 'Publishing' : 'Publish'}
+                </button>
+            </div>
+
+
             {'Progress: ' + uploadProgress}
-            {mutation.isError && <span>{mutation.error.message}</span>}
+            {publishMutation.isError && <span>{publishMutation.error.message}</span>}
+
 
         </form>
     </div>

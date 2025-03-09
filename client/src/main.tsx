@@ -7,7 +7,6 @@ import {
 } from 'react-router-dom'
 import HomePage from './routes/HomePage.tsx'
 import PostListPage from './routes/PostListPage.tsx'
-import WritePage from './routes/WritePage.tsx'
 import LoginPage from './routes/LoginPage.tsx'
 import RegisterPage from './routes/RegisterPage.tsx'
 import SinglePostPage from './routes/SinglePostPage.tsx'
@@ -20,6 +19,7 @@ import {
 import { ToastContainer } from 'react-toastify'
 import RequireAuth from './components/RequireAuth.tsx'
 import Unauthorized from './components/Unauthorized.tsx'
+import WritePage from './routes/WritePage.tsx'
 
 const queryClient = new QueryClient();
 
@@ -40,8 +40,8 @@ const router = createBrowserRouter([
         element: <SinglePostPage />
       },
       {
-        path: "/write",
-        element: <RequireAuth allowedRoles={['USER']} />
+        path: "/draft/:draftId",
+        element: <RequireAuth allowedRoles={["ADMIN", "EDITOR"]} children={<WritePage />} />
       },
       {
         path: "/login",

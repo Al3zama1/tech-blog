@@ -2,11 +2,13 @@ import { useEffect } from "react";
 import { axiosPrivate } from "../api/axios";
 import useAuth from "./UseAuth";
 import userRefreshToken from "./useRefreshToken";
+import { replace, useNavigate } from "react-router-dom";
 
 const useAxiosPrivate = () => {
 
     const refresh = userRefreshToken();
     const { accessToken } = useAuth()
+    const navigate = useNavigate();
 
     useEffect(() => {
         // Initial request
@@ -25,6 +27,9 @@ const useAxiosPrivate = () => {
             response => response,
             async (error) => {
                 const prevRequest = error?.config;
+                if (error?.response?.status === 401 && !accessToken) {
+                    navigate('/login')
+                }
                 if (error?.response?.status === 401 && !prevRequest?.sent) {
                     prevRequest.sent = true;
                     const newAccessToken = await refresh();

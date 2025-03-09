@@ -36,6 +36,18 @@ body {
   background-color: white;
 }
 
+.ql-editor {
+  @apply flex flex-col lg:text-lg gap-6 text-justify
+}
+
+.ql-editor h2 {
+  @apply text-lg font-semibold
+}
+
+.article .ql-editor .ql-code-block-container .ql-ui {
+  @apply hidden
+}
+
 @layer base {
   :root {
     --background: 0 0% 100%;

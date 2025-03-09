@@ -1,6 +1,6 @@
 import { useMutation } from '@tanstack/react-query';
-import React from 'react'
-import axios, { axiosPrivate } from '../api/axios';
+import React, { useState } from 'react'
+import axios from '../api/axios';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { AuthResponseType } from '../types/api';
 import useAuth from '../hooks/UseAuth';
@@ -8,20 +8,30 @@ import useAuth from '../hooks/UseAuth';
 const LoginPage = () => {
 
   const {setUser, setAccessToken} = useAuth();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
 
   const navigate = useNavigate();
   const location = useLocation();
   const from = location.state?.from?.pathname || '/';
 
+  type LoginType = {
+    email: string,
+    password: string
+  }
+
   const loginMutation = useMutation({
-    mutationFn: credentials => {
-      return axiosPrivate.post('/auth/authenticate', credentials, )
+    mutationFn: (credentials : LoginType) => {
+      return axios.post('/auth/authenticate', credentials, {
+        withCredentials: true
+      })
 
     },
     onSuccess: (res) => {
       const data: AuthResponseType = res.data;
       setAccessToken(data.accessToken)
       setUser({
+        id: data.id,
         firstName: data.firstName,
         lastName: data.lastName,
         email: data.email,
@@ -36,16 +46,7 @@ const LoginPage = () => {
 
   const handleLogin = e => {
     e.preventDefault();
-    const formData = new FormData(e.target);
-
-    const data = {
-      email: formData.get('email'),
-      password: formData.get('password')
-    }
-
-    loginMutation.mutate(data);
-    
-    
+    loginMutation.mutate({email, password});
   }
 
   return (
@@ -73,8 +74,8 @@ const LoginPage = () => {
               <hr className='flex-grow border-t border-gray-300' />
             </div>
             <form onSubmit={handleLogin}>
-              <input type="email" id='email' required name='email' placeholder='Enter your email' className='border-gray-300 border-[1px] focus:border-2 focus:shadow-sm rounded-md w-full outline-none text-xs py-1 px-2 mb-3' />
-              <input type="password" id='password' name='password' required placeholder='Enter your password' className='border-gray-300 border-[1px] focus:border-2 focus:shadow-sm rounded-md w-full outline-none text-xs py-1 px-2' />
+              <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" id='email' required name='email' placeholder='Enter your email' className='border-gray-300 border-[1px] focus:border-2 focus:shadow-sm rounded-md w-full outline-none text-xs py-1 px-2 mb-3' />
+              <input value={password} onChange={(e) => setPassword(e.target.value)} type="password" id='password' name='password' required placeholder='Enter your password' className='border-gray-300 border-[1px] focus:border-2 focus:shadow-sm rounded-md w-full outline-none text-xs py-1 px-2' />
               <button className='bg-gray-800 w-full rounded-md text-white text-xs py-1 my-4'>Login</button>
             </form>
             <p className='text-xs'><span className='text-gray-500'>Don't have an account?</span> <button className='font-bold'>Sign up</button></p>

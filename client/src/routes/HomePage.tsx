@@ -1,25 +1,55 @@
-import React from 'react'
-import { Link } from 'react-router-dom'
+import React, { useEffect, useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import MainCategories from '../components/MainCategories'
 import FeaturedPosts from '../components/FeaturedPosts'
 import PostList from '../components/PostList'
+import { useMutation } from '@tanstack/react-query'
+import useAxiosPrivate from '@/hooks/useAxiosPrivate'
+import useAuth from '@/hooks/UseAuth'
 
 const HomePage = () => {
+
+    const navigate = useNavigate();
+    const axiosPrivate = useAxiosPrivate();
+    const { user } = useAuth();
+
+    useEffect(() => {
+        window.scrollTo(0, 0);
+    }, []);
+
+    console.log("home page loaded")
+
+
+    const createDraft = useMutation({
+        mutationFn: () => {
+            return axiosPrivate.post('/drafts');
+        },
+        onSuccess: res => {
+            const draftId = res.headers?.location.split("/").pop();
+            navigate(`/draft/${draftId}`)
+        }
+    })
+
+    const canCreateDraft = () => {
+        return user?.roles.includes("ADMIN") || user?.roles.includes("EDITOR")
+    }
+
   return (
     <div className='mt-4 flex flex-col gap-4'>
         {/* Breadcrum */}
-        <div className='flex gap-4'>
+        {/* <div className='flex gap-4'>
             <Link to='/'>Home</Link>
             <span>.</span>
             <span className='text-blue-800'>Blogs and Articles</span>
-        </div>
+        </div> */}
         {/* Introduction */}
         <div className='flex items-center justify-between'>
             <div className=''>
-                <h1 className='text-gray-800 text-2xl md:text-5xl lg:text-6xl font-bold'>Unlock Your Tech Potential - Master Technology Step by Step.</h1>
+                <h1 className='text-gray-800 text-2xl md:text-5xl lg:text-6xl font-bold'>Unlock Your Tech Potential - Learn Technology Step by Step.</h1>
                 <p className='mt-8 text-md md:text-xl'>Articles focused on programming, network engineering, information technology, and personal projects.</p>
             </div>
-            <Link to='/write' className='hidden md:block relative'>
+            {/* {canCreateDraft() &&
+            <div onClick={() => createDraft.mutate()} className='hidden md:block relative'>
                 <svg
                     viewBox="0 0 200 200"
                     width="200"
@@ -55,15 +85,16 @@ const HomePage = () => {
                         <polyline points="9 6 18 6 18 15" />
                     </svg>
                 </button>
-            </Link>
+            </div>
+            } */}
         </div>
-        {/* Categories */}
-        <MainCategories />
+        {/* <MainCategories /> */}
         {/* Featured Posts */}
         <FeaturedPosts />
+        {/* Categories */}
         {/* Post List */}
         <div>
-            <h1 className='my-8 text-2xl text-gray-600'>Recent Posts</h1>
+            <h1 className='my-8 text-2xl text-gray-600'>Recent Articles</h1>
             <PostList />
         </div>
     </div>
