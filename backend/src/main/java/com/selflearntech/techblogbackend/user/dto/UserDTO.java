@@ -17,6 +17,8 @@ import java.util.Set;
 public class UserDTO {
 
     @NotBlank
+    private String id;
+    @NotBlank
     private String firstName;
 
     @NotBlank

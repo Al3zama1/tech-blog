@@ -17,6 +17,9 @@ import java.util.Set;
 public class UserAuthenticationResponseDTO {
 
     @NotBlank
+    private String id;
+
+    @NotBlank
     private String firstName;
 
     @NotBlank

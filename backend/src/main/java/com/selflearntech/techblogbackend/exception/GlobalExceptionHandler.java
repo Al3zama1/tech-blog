@@ -67,6 +67,12 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return ResponseEntity.badRequest().body(errorResponse);
     }
 
+    @ExceptionHandler(NotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ResponseEntity<Object> handleNotFoundException(NotFoundException ex, WebRequest request) {
+        return buildErrorResponse(ex, HttpStatus.NOT_FOUND, request);
+    }
+
     // handles all internal Spring Exceptions
     @Override
     protected ResponseEntity<Object> handleExceptionInternal(@NonNull Exception ex, @NonNull Object body, @NonNull HttpHeaders headers, @NonNull HttpStatusCode statusCode, @NonNull WebRequest request) {

@@ -24,4 +24,9 @@ public class Role implements GrantedAuthority {
         return authority.name();
     }
 
+    public void setAuthority(RoleType authorityf) {
+        this.authority = authority;
+    }
+
+
 }

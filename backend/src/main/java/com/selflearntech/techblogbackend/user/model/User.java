@@ -1,5 +1,6 @@
 package com.selflearntech.techblogbackend.user.model;
 
+import com.selflearntech.techblogbackend.article.model.Article;
 import lombok.*;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
@@ -25,10 +26,13 @@ public class User implements UserDetails {
     @Indexed(unique = true)
     private String email;
     private String password;
+    private String introduction;
+    private String linkedInUrl;
+    private String gitHubUrl;
     private String profileImg;
     private Instant createdAt;
-    private Set<String> savedArticles = new HashSet<>();
-    @DBRef
+    private Set<Article> savedArticles = new HashSet<>();
+    @DBRef()
     private Set<Role> authorities = new HashSet<>();
 
     @Override
