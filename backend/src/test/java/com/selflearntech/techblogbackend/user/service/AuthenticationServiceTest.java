@@ -71,10 +71,19 @@ class AuthenticationServiceTest {
             RegistrationRequestDTO registrationPayload = UserMother.registrationPayload().build();
             Role userRole = Role.builder().authority(RoleType.USER).build();
             String encodedPassword = "encoded-password";
+            LocalDateTime defaultLocalDateTime = LocalDateTime.of(2024, 12, 13, 12, 15);
+            Clock fixedClock = Clock.fixed(defaultLocalDateTime.toInstant(ZoneOffset.UTC), ZoneId.of("UTC"));
+            Instant currentTime = fixedClock.instant();
 
             given(userRepository.existsUserByEmail(registrationPayload.getEmail())).willReturn(false);
             given(roleRepository.findByAuthority(RoleType.USER)).willReturn(Optional.of(userRole));
             given(passwordEncoder.encode(registrationPayload.getPassword())).willReturn(encodedPassword);
+            given(clock.instant()).willReturn(currentTime);
+            given(userRepository.save(any(User.class))).willAnswer(result -> {
+                User user = result.getArgument(0);
+                user.setId("64c3e9f2a1b2c34d56ef1234");
+                return user;
+            });
 
             // When
             cut.registerUser(registrationPayload);
@@ -85,8 +94,12 @@ class AuthenticationServiceTest {
 
             User savedUser = userArgumentCaptor.getValue();
             assertThat(savedUser.getPassword()).isEqualTo(encodedPassword);
+            assertThat(savedUser.getFirstName()).isEqualTo(registrationPayload.getFirstName());
+            assertThat(savedUser.getLastName()).isEqualTo(registrationPayload.getLastName());
+            assertThat(savedUser.getEmail()).isEqualTo(registrationPayload.getEmail());
             assertThat(savedUser.getAuthorities().size()).isEqualTo(1);
             assertThat(savedUser.getAuthorities().stream().findFirst().get().getAuthority()).isEqualTo(RoleType.USER.name());
+            assertThat(savedUser.getCreatedAt()).isEqualTo(currentTime);
         }
 
         @Test
