@@ -1,9 +1,9 @@
 package com.selflearntech.techblogbackend.user.controller;
 
-import com.selflearntech.techblogbackend.user.dto.UserAuthenticationRequestDTO;
-import com.selflearntech.techblogbackend.user.dto.UserAuthenticationResponseDTO;
+import com.selflearntech.techblogbackend.user.dto.AuthenticationRequestDTO;
+import com.selflearntech.techblogbackend.user.dto.AuthenticationResponseDTO;
 import com.selflearntech.techblogbackend.user.dto.UserDTO;
-import com.selflearntech.techblogbackend.user.dto.UserRegistrationRequestDTO;
+import com.selflearntech.techblogbackend.user.dto.RegistrationRequestDTO;
 import com.selflearntech.techblogbackend.user.mapper.UserMapper;
 import com.selflearntech.techblogbackend.user.service.IAuthenticationService;
 import jakarta.validation.Valid;
@@ -27,7 +27,7 @@ public class AuthenticationController {
 
     @PostMapping("/register")
     @ResponseStatus(HttpStatus.CREATED)
-    public ResponseEntity<Void> registerUser(@Valid  @RequestBody UserRegistrationRequestDTO payload) {
+    public ResponseEntity<Void> registerUser(@Valid  @RequestBody RegistrationRequestDTO payload) {
         String userId = authenticationService.registerUser(payload);
 
         return ResponseEntity
@@ -38,8 +38,8 @@ public class AuthenticationController {
 
     @PostMapping("/authenticate")
     @ResponseStatus(HttpStatus.OK)
-    public ResponseEntity<UserDTO> authenticateUser(@Valid @RequestBody UserAuthenticationRequestDTO payload) {
-        UserAuthenticationResponseDTO authenticationResponse = authenticationService.authenticateUser(payload.getEmail(), payload.getPassword());
+    public ResponseEntity<UserDTO> authenticateUser(@Valid @RequestBody AuthenticationRequestDTO payload) {
+        AuthenticationResponseDTO authenticationResponse = authenticationService.authenticateUser(payload.getEmail(), payload.getPassword());
         UserDTO userDTO = userMapper.toUserDTO(authenticationResponse);
 
         ResponseCookie refreshToken = ResponseCookie.from("refresh-token", authenticationResponse.getRefreshToken())

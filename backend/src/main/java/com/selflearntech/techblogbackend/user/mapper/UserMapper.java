@@ -1,6 +1,6 @@
 package com.selflearntech.techblogbackend.user.mapper;
 
-import com.selflearntech.techblogbackend.user.dto.UserAuthenticationResponseDTO;
+import com.selflearntech.techblogbackend.user.dto.AuthenticationResponseDTO;
 import com.selflearntech.techblogbackend.user.dto.UserDTO;
 import com.selflearntech.techblogbackend.user.model.Role;
 import com.selflearntech.techblogbackend.user.model.User;
@@ -13,10 +13,10 @@ import java.util.stream.Collectors;
 @Mapper(componentModel = "spring")
 public interface UserMapper {
 
-    UserDTO toUserDTO(UserAuthenticationResponseDTO userAuthenticationResponseDTO);
+    UserDTO toUserDTO(AuthenticationResponseDTO authenticationResponseDTO);
 
     @Mapping(expression = "java(getRoles(user))", target = "roles")
-    UserAuthenticationResponseDTO toUserAuthenticationResponseDTO(User user, String refreshToken, String accessToken);
+    AuthenticationResponseDTO toAuthenticationResponseDTO(User user, String refreshToken, String accessToken);
 
     @Mapping(expression = "java(getRoles(user))", target = "roles")
     UserDTO toUserDTO(User user, String accessToken);

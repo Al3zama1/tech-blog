@@ -1,7 +1,7 @@
 package com.selflearntech.techblogbackend.user.mapper;
 
 import com.selflearntech.techblogbackend.user.UserMother;
-import com.selflearntech.techblogbackend.user.dto.UserAuthenticationResponseDTO;
+import com.selflearntech.techblogbackend.user.dto.AuthenticationResponseDTO;
 import com.selflearntech.techblogbackend.user.dto.UserDTO;
 import com.selflearntech.techblogbackend.user.model.Role;
 import com.selflearntech.techblogbackend.user.model.RoleType;
@@ -24,9 +24,9 @@ class UserMapperTest {
     }
 
     @Test
-    void toUserDTOFromUserAuthenticationResponseDTO() {
+    void toUserDTOFromAuthenticationResponseDTO() {
         // Given
-        UserAuthenticationResponseDTO authenticationResponse = UserMother.authenticationResponsePayload().build();
+        AuthenticationResponseDTO authenticationResponse = UserMother.authenticationResponsePayload().build();
 
         // When
         UserDTO userDTO = cut.toUserDTO(authenticationResponse);
@@ -42,14 +42,14 @@ class UserMapperTest {
     }
 
     @Test
-    void toUserAuthenticationResponseDTOFromUserAndRefreshTokenAndAccessToken() {
+    void toAuthenticationResponseDTOFromUserAndRefreshTokenAndAccessToken() {
         // Given
         User user = UserMother.user().build();
         String accessToken = "access-token";
         String refreshToken = "refresh-token";
 
         // When
-        UserAuthenticationResponseDTO authenticationResponse = cut.toUserAuthenticationResponseDTO(user, refreshToken, accessToken);
+        AuthenticationResponseDTO authenticationResponse = cut.toAuthenticationResponseDTO(user, refreshToken, accessToken);
         Set<String> userRoles = cut.getRoles(user);
 
         // Then

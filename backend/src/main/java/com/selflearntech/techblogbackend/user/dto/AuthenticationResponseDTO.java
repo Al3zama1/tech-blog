@@ -14,7 +14,7 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class UserAuthenticationResponseDTO {
+public class AuthenticationResponseDTO {
 
     @NotBlank
     private String id;

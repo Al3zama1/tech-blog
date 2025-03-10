@@ -4,10 +4,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.selflearntech.techblogbackend.config.SecurityConfig;
 import com.selflearntech.techblogbackend.exception.*;
 import com.selflearntech.techblogbackend.user.UserMother;
-import com.selflearntech.techblogbackend.user.dto.UserAuthenticationRequestDTO;
-import com.selflearntech.techblogbackend.user.dto.UserAuthenticationResponseDTO;
+import com.selflearntech.techblogbackend.user.dto.AuthenticationRequestDTO;
+import com.selflearntech.techblogbackend.user.dto.AuthenticationResponseDTO;
 import com.selflearntech.techblogbackend.user.dto.UserDTO;
-import com.selflearntech.techblogbackend.user.dto.UserRegistrationRequestDTO;
+import com.selflearntech.techblogbackend.user.dto.RegistrationRequestDTO;
 import com.selflearntech.techblogbackend.user.mapper.UserMapper;
 import com.selflearntech.techblogbackend.user.model.RoleType;
 import com.selflearntech.techblogbackend.user.service.IAuthenticationService;
@@ -53,7 +53,7 @@ class AuthenticationControllerTest {
         @Test
         void registerUser_WithValidData_ShouldReturn201Status() throws Exception {
             // Given
-            UserRegistrationRequestDTO registrationPayload = UserMother.registrationPayload().build();
+            RegistrationRequestDTO registrationPayload = UserMother.registrationPayload().build();
 
             given(authenticationService.registerUser(registrationPayload)).willReturn("userId");
 
@@ -72,7 +72,7 @@ class AuthenticationControllerTest {
         @Test
         void registerUser_WithValidDataButFailToAssignUserRole_ShouldReturn500Status() throws Exception {
             // Given
-            UserRegistrationRequestDTO registrationPayload = UserMother.registrationPayload().build();
+            RegistrationRequestDTO registrationPayload = UserMother.registrationPayload().build();
 
             doThrow(new RoleAssignmentException(ErrorMessages.ROLE_ASSIGNMENT_FAILURE, RoleType.USER.name()))
                     .when(authenticationService).registerUser(registrationPayload);
@@ -91,7 +91,7 @@ class AuthenticationControllerTest {
         @Test
         void registerUser_WithInvalidEmailFormat_ShouldReturn400StatusWithInputValidationError() throws Exception {
             // Given
-            UserRegistrationRequestDTO registrationPayload = UserMother.registrationPayload()
+            RegistrationRequestDTO registrationPayload = UserMother.registrationPayload()
                     .email("john.doe.com")
                     .build();
 
@@ -109,7 +109,7 @@ class AuthenticationControllerTest {
         @Test
         void registerUser_WithExistingEmail_ShouldReturn409StatusWithErrorMessage() throws Exception {
             // Given
-            UserRegistrationRequestDTO registrationPayload = UserMother.registrationPayload().build();
+            RegistrationRequestDTO registrationPayload = UserMother.registrationPayload().build();
 
             doThrow(new ConflictException(ErrorMessages.EMAIL_TAKEN)).when(authenticationService).registerUser(registrationPayload);
 
@@ -124,7 +124,7 @@ class AuthenticationControllerTest {
         @Test
         void registerUser_WithNonMatchingPasswords_ShouldReturn400StatusWithErrorMessage() throws Exception {
             // Given
-            UserRegistrationRequestDTO registrationPayload = UserMother.registrationPayload()
+            RegistrationRequestDTO registrationPayload = UserMother.registrationPayload()
                     .password("C11l08a#0522")
                     .verifyPassword("C11l08a#0523")
                     .build();
@@ -147,8 +147,8 @@ class AuthenticationControllerTest {
         @Test
         void authenticateUser_WithValidData_ShouldReturn200StatusWithUserDTO() throws Exception {
             // Given
-            UserAuthenticationRequestDTO authenticationPayload = UserMother.userAuthenticationPayload().build();
-            UserAuthenticationResponseDTO authenticationResponse = UserMother.authenticationResponsePayload().build();
+            AuthenticationRequestDTO authenticationPayload = UserMother.authenticationPayload().build();
+            AuthenticationResponseDTO authenticationResponse = UserMother.authenticationResponsePayload().build();
 
             given(authenticationService.authenticateUser(authenticationPayload.getEmail(), authenticationPayload.getPassword()))
                     .willReturn(authenticationResponse);
@@ -171,7 +171,7 @@ class AuthenticationControllerTest {
         @Test
         void authenticateUser_WithIncorrectEmail_ShouldReturn401StatusWithErrorMessage() throws Exception {
             // Given
-            UserAuthenticationRequestDTO authenticationPayload = UserMother.userAuthenticationPayload().build();
+            AuthenticationRequestDTO authenticationPayload = UserMother.authenticationPayload().build();
 
             given(authenticationService.authenticateUser(authenticationPayload.getEmail(), authenticationPayload.getPassword()))
                     .willThrow(new UsernameNotFoundException(ErrorMessages.INVALID_CREDENTIALS));
@@ -187,7 +187,7 @@ class AuthenticationControllerTest {
         @Test
         void authenticateUser_WithIncorrectPassword_ShouldReturn401StatusWithErrorMessage() throws Exception {
             // Given
-            UserAuthenticationRequestDTO authenticationPayload = UserMother.userAuthenticationPayload().build();
+            AuthenticationRequestDTO authenticationPayload = UserMother.authenticationPayload().build();
 
             given(authenticationService.authenticateUser(authenticationPayload.getEmail(), authenticationPayload.getPassword()))
                     .willThrow(new BadCredentialsException(ErrorMessages.INVALID_CREDENTIALS));
@@ -203,7 +203,7 @@ class AuthenticationControllerTest {
         @Test
         void authenticateUserWithInvalidEmailFormat_ShouldReturn400StatusWithValidationError() throws Exception {
             // Given
-            UserAuthenticationRequestDTO authenticationPayload = UserMother.userAuthenticationPayload()
+            AuthenticationRequestDTO authenticationPayload = UserMother.authenticationPayload()
                     .email("john.doe.com")
                     .build();
 

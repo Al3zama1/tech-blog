@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class UserAuthenticationRequestDTO {
+public class AuthenticationRequestDTO {
 
     @NotBlank
     @Email

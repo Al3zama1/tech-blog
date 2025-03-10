@@ -1,14 +1,14 @@
 package com.selflearntech.techblogbackend.user.service;
 
-import com.selflearntech.techblogbackend.user.dto.UserAuthenticationResponseDTO;
+import com.selflearntech.techblogbackend.user.dto.AuthenticationResponseDTO;
 import com.selflearntech.techblogbackend.user.dto.UserDTO;
-import com.selflearntech.techblogbackend.user.dto.UserRegistrationRequestDTO;
+import com.selflearntech.techblogbackend.user.dto.RegistrationRequestDTO;
 
 public interface IAuthenticationService {
 
-    String registerUser(UserRegistrationRequestDTO registerDTO);
+    String registerUser(RegistrationRequestDTO registerDTO);
 
-    UserAuthenticationResponseDTO authenticateUser(String email, String password);
+    AuthenticationResponseDTO authenticateUser(String email, String password);
 
     UserDTO refreshAccessToken(String refreshToken);
 }

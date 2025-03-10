@@ -1,9 +1,9 @@
 package com.selflearntech.techblogbackend.user;
 
-import com.selflearntech.techblogbackend.user.dto.UserAuthenticationRequestDTO;
-import com.selflearntech.techblogbackend.user.dto.UserAuthenticationResponseDTO;
+import com.selflearntech.techblogbackend.user.dto.AuthenticationRequestDTO;
+import com.selflearntech.techblogbackend.user.dto.AuthenticationResponseDTO;
 import com.selflearntech.techblogbackend.user.dto.UserDTO;
-import com.selflearntech.techblogbackend.user.dto.UserRegistrationRequestDTO;
+import com.selflearntech.techblogbackend.user.dto.RegistrationRequestDTO;
 import com.selflearntech.techblogbackend.user.model.Role;
 import com.selflearntech.techblogbackend.user.model.RoleType;
 import com.selflearntech.techblogbackend.user.model.User;
@@ -12,8 +12,8 @@ import java.util.Set;
 
 public class UserMother {
 
-    public static UserRegistrationRequestDTO.UserRegistrationRequestDTOBuilder registrationPayload() {
-        return UserRegistrationRequestDTO.builder()
+    public static RegistrationRequestDTO.RegistrationRequestDTOBuilder registrationPayload() {
+        return RegistrationRequestDTO.builder()
                 .firstName("John")
                 .lastName("Doe")
                 .email("john.doe@gmail.com")
@@ -21,14 +21,14 @@ public class UserMother {
                 .verifyPassword("C11l08a#05");
     }
 
-    public static UserAuthenticationRequestDTO.UserAuthenticationRequestDTOBuilder userAuthenticationPayload() {
-        return UserAuthenticationRequestDTO.builder()
+    public static AuthenticationRequestDTO.AuthenticationRequestDTOBuilder authenticationPayload() {
+        return AuthenticationRequestDTO.builder()
                 .email("john.doe@gmail.com")
                 .password("C11l08a#05");
     }
 
-    public static UserAuthenticationResponseDTO.UserAuthenticationResponseDTOBuilder authenticationResponsePayload() {
-        return UserAuthenticationResponseDTO.builder()
+    public static AuthenticationResponseDTO.AuthenticationResponseDTOBuilder authenticationResponsePayload() {
+        return AuthenticationResponseDTO.builder()
                 .id("67983098a363fb3d06132a51")
                 .firstName("John")
                 .lastName("Doe")

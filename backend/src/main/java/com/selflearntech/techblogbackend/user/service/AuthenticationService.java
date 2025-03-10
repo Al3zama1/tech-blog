@@ -4,9 +4,9 @@ import com.selflearntech.techblogbackend.exception.*;
 import com.selflearntech.techblogbackend.token.model.Token;
 import com.selflearntech.techblogbackend.token.repository.TokenRepository;
 import com.selflearntech.techblogbackend.token.service.TokenService;
-import com.selflearntech.techblogbackend.user.dto.UserAuthenticationResponseDTO;
+import com.selflearntech.techblogbackend.user.dto.AuthenticationResponseDTO;
 import com.selflearntech.techblogbackend.user.dto.UserDTO;
-import com.selflearntech.techblogbackend.user.dto.UserRegistrationRequestDTO;
+import com.selflearntech.techblogbackend.user.dto.RegistrationRequestDTO;
 import com.selflearntech.techblogbackend.user.mapper.UserMapper;
 import com.selflearntech.techblogbackend.user.model.Role;
 import com.selflearntech.techblogbackend.user.model.RoleType;
@@ -43,7 +43,7 @@ public class AuthenticationService implements IAuthenticationService{
     private final Clock clock;
 
     @Override
-    public String registerUser(UserRegistrationRequestDTO registerDTO) {
+    public String registerUser(RegistrationRequestDTO registerDTO) {
         if (!registerDTO.getPassword().equals(registerDTO.getVerifyPassword())) throw new BadRequestException(ErrorMessages.PASSWORDS_MUST_MATCH);
         boolean emailTaken = userRepository.existsUserByEmail(registerDTO.getEmail());
         if (emailTaken) throw new ConflictException(ErrorMessages.EMAIL_TAKEN);
@@ -65,7 +65,7 @@ public class AuthenticationService implements IAuthenticationService{
     }
 
     @Override
-    public UserAuthenticationResponseDTO authenticateUser(String email, String password) {
+    public AuthenticationResponseDTO authenticateUser(String email, String password) {
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(email, password)
         );
@@ -85,7 +85,7 @@ public class AuthenticationService implements IAuthenticationService{
         token.setExpireTime(refreshTokenExpiration);
         tokenRepository.save(token);
 
-        return userMapper.toUserAuthenticationResponseDTO(authenticatedUser, refreshToken, accessToken);
+        return userMapper.toAuthenticationResponseDTO(authenticatedUser, refreshToken, accessToken);
     }
 
     @Override
