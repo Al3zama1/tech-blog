@@ -152,6 +152,7 @@ class AuthenticationServiceTest {
                     .hasMessage(ErrorMessages.ROLE_ASSIGNMENT_FAILURE + ": " + RoleType.USER.name());
 
             // Then
+            then(passwordEncoder).shouldHaveNoInteractions();
             then(userRepository).should(never()).save(any(User.class));
 
         }
