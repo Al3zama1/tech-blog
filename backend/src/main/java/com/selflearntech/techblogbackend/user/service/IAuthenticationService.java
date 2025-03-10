@@ -6,7 +6,7 @@ import com.selflearntech.techblogbackend.user.dto.UserRegistrationRequestDTO;
 
 public interface IAuthenticationService {
 
-    void registerUser(UserRegistrationRequestDTO registerDTO);
+    String registerUser(UserRegistrationRequestDTO registerDTO);
 
     UserAuthenticationResponseDTO authenticateUser(String email, String password);
 

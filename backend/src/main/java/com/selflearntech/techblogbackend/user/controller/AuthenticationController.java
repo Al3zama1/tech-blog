@@ -14,6 +14,7 @@ import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.net.URI;
 import java.time.Duration;
 
 @RestController
@@ -26,8 +27,13 @@ public class AuthenticationController {
 
     @PostMapping("/register")
     @ResponseStatus(HttpStatus.CREATED)
-    public void registerUser(@Valid  @RequestBody UserRegistrationRequestDTO payload) {
-        authenticationService.registerUser(payload);
+    public ResponseEntity<Void> registerUser(@Valid  @RequestBody UserRegistrationRequestDTO payload) {
+        String userId = authenticationService.registerUser(payload);
+
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .location(URI.create(String.format("/api/v1/users/%s", userId)))
+                .build();
     }
 
     @PostMapping("/authenticate")

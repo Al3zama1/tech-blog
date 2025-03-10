@@ -43,10 +43,10 @@ public class AuthenticationService implements IAuthenticationService{
     private final Clock clock;
 
     @Override
-    public void registerUser(UserRegistrationRequestDTO registerDTO) {
+    public String registerUser(UserRegistrationRequestDTO registerDTO) {
         if (!registerDTO.getPassword().equals(registerDTO.getVerifyPassword())) throw new BadRequestException(ErrorMessages.PASSWORDS_MUST_MATCH);
         boolean emailTaken = userRepository.existsUserByEmail(registerDTO.getEmail());
-        if (emailTaken) throw new UserExistsException(ErrorMessages.EMAIL_TAKEN);
+        if (emailTaken) throw new ConflictException(ErrorMessages.EMAIL_TAKEN);
 
         Role userRole = roleRepository.findByAuthority(RoleType.USER)
                 .orElseThrow(() -> new RoleAssignmentException(ErrorMessages.ROLE_ASSIGNMENT_FAILURE, RoleType.USER.name()));
@@ -60,7 +60,8 @@ public class AuthenticationService implements IAuthenticationService{
                 .password(encodedPassword)
                 .build();
 
-        userRepository.save(newUser);
+        newUser = userRepository.save(newUser);
+        return newUser.getId();
     }
 
     @Override

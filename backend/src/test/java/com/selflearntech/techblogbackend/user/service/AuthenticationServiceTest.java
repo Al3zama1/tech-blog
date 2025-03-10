@@ -116,7 +116,7 @@ class AuthenticationServiceTest {
 
             // When
             assertThatThrownBy(() -> cut.registerUser(registrationPayload))
-                    .isInstanceOf(UserExistsException.class)
+                    .isInstanceOf(ConflictException.class)
                             .hasMessage(ErrorMessages.EMAIL_TAKEN);
 
             // Then

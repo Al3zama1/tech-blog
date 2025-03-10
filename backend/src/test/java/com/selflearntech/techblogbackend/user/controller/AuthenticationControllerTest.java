@@ -55,11 +55,15 @@ class AuthenticationControllerTest {
             // Given
             UserRegistrationRequestDTO registrationPayload = UserMother.registrationPayload().build();
 
+            given(authenticationService.registerUser(registrationPayload)).willReturn("userId");
+
             // When
             mockMvc.perform(post("/api/v1/auth/register")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(registrationPayload)))
-                    .andExpect(status().isCreated());
+                    .andExpect(status().isCreated())
+                    .andExpect(header().string("Location", "/api/v1/users/userId"));
+
 
             // Then
             then(authenticationService).should().registerUser(registrationPayload);
@@ -77,7 +81,8 @@ class AuthenticationControllerTest {
             mockMvc.perform(post("/api/v1/auth/register")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(registrationPayload)))
-                    .andExpect(status().isInternalServerError());
+                    .andExpect(status().isInternalServerError())
+                    .andExpect(responseBody().containsErrorMessage(ErrorMessages.UNKNOWN_ERROR));
 
             // Then
             then(authenticationService).should().registerUser(registrationPayload);
@@ -106,7 +111,7 @@ class AuthenticationControllerTest {
             // Given
             UserRegistrationRequestDTO registrationPayload = UserMother.registrationPayload().build();
 
-            doThrow(new UserExistsException(ErrorMessages.EMAIL_TAKEN)).when(authenticationService).registerUser(registrationPayload);
+            doThrow(new ConflictException(ErrorMessages.EMAIL_TAKEN)).when(authenticationService).registerUser(registrationPayload);
 
             // When, Then
             mockMvc.perform(post("/api/v1/auth/register")

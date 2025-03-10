@@ -25,9 +25,9 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     @Value("${selflearntech.trace}")
     private boolean printStackTrace;
 
-    @ExceptionHandler(UserExistsException.class)
+    @ExceptionHandler(ConflictException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
-    public ResponseEntity<Object> handleUserExistsException(UserExistsException ex, WebRequest request) {
+    public ResponseEntity<Object> handleUserExistsException(ConflictException ex, WebRequest request) {
         return buildErrorResponse(ex, HttpStatus.CONFLICT, request);
     }
 
@@ -67,6 +67,13 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return ResponseEntity.badRequest().body(errorResponse);
     }
 
+    @ExceptionHandler(RoleAssignmentException.class)
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public ResponseEntity<Object> handleRoleAssignmentException(RoleAssignmentException ex, WebRequest request) {
+        log.error(ErrorMessages.ROLE_ASSIGNMENT_FAILURE, ex);
+        return buildErrorResponse(ex, ErrorMessages.UNKNOWN_ERROR, HttpStatus.INTERNAL_SERVER_ERROR, request);
+    }
+
     @ExceptionHandler(NotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public ResponseEntity<Object> handleNotFoundException(NotFoundException ex, WebRequest request) {
@@ -76,7 +83,8 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     // handles all internal Spring Exceptions
     @Override
     protected ResponseEntity<Object> handleExceptionInternal(@NonNull Exception ex, @NonNull Object body, @NonNull HttpHeaders headers, @NonNull HttpStatusCode statusCode, @NonNull WebRequest request) {
-        return buildErrorResponse(ex, HttpStatus.resolve(statusCode.value()), request);
+        log.error("Internal Spring Boot Exception", ex);
+        return buildErrorResponse(ex, ErrorMessages.UNKNOWN_ERROR, HttpStatus.INTERNAL_SERVER_ERROR, request);
     }
 
     @ExceptionHandler(Exception.class)
