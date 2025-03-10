@@ -42,7 +42,7 @@ export type ArticlePreviewType = {
     category: string,
     description: string,
     createdAt: string,
-    img: string,
+    coverImg: string,
     slug: string
   }
 
@@ -51,7 +51,7 @@ export type ArticlePreviewType = {
     firstName: string,
     lastName: string,
     profileImg?: string,
-    introduction?: string,
+    bio?: string,
     linkedInUrl?: string
     gitHubUrl?: string
   }

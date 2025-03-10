@@ -20,6 +20,7 @@ import { ToastContainer } from 'react-toastify'
 import RequireAuth from './components/RequireAuth.tsx'
 import Unauthorized from './components/Unauthorized.tsx'
 import WritePage from './routes/WritePage.tsx'
+import EditorAboutPage from './routes/EditorAboutPage.tsx'
 
 const queryClient = new QueryClient();
 
@@ -38,6 +39,10 @@ const router = createBrowserRouter([
       {
         path: "/:slug",
         element: <SinglePostPage />
+      },
+      {
+        path: "/authors/:authorId",
+        element: <EditorAboutPage />
       },
       {
         path: "/draft/:draftId",

@@ -36,7 +36,7 @@ const FeaturedPosts = () => {
     <div className='mt-8 flex flex-col lg:flex-row gap-5'>
         
         <div className='w-full lg:w-1/2 flex flex-col gap-1'>
-            {articles[0]?.img && <Image src={articles[0].img} className='rounded-3xl object-cover' w='895' />}
+            {articles[0]?.coverImg && <Image src={articles[0].coverImg} className='rounded-3xl object-cover' w='895' />}
             <Link to={`/${articles[0].slug}`} className='text-xl lg:text-3xl font-semibold lg:font-bold'>1. {articles[0].title}</Link>
             <div className='flex items-center gap-1 text-gray-400 text-sm'>
                 <span>Written by</span>
@@ -56,9 +56,9 @@ const FeaturedPosts = () => {
                 articles.map((article, index) => (
                     index > 0 && 
                     <div className='flex justify-between gap-4' key={article.slug}>
-                        {article.img && 
+                        {article.coverImg && 
                         <div className='w-1/3 aspect-video'>
-                            <Image src={article.img} className='rounded-3xl object-cover w-full min-h-32' w='298' h='200' />
+                            <Image src={article.coverImg} className='rounded-3xl object-cover w-full min-h-32' w='298' h='200' />
                         </div>
                         }
                         <div className='w-2/3'>
@@ -66,7 +66,7 @@ const FeaturedPosts = () => {
                             <div className='flex flex-wrap items-center gap-2 text-sm text-gray-400'>
                                 <span>Written by</span>
                                 <AuthorHover author={article.author}>
-                                    <Link to='/test' className='text-blue-800 block'>{`${article.author.firstName} ${article.author.lastName}`}</Link>
+                                    <Link to={`/authors/${article.author.id}`} className='text-blue-800 block'>{`${article.author.firstName} ${article.author.lastName}`}</Link>
                                 </AuthorHover>
                                 <span className='lg:hidden xl:block'>on</span>
                                 <Link to={`/posts?cat=${article.category.replace(" ", "-")}`} className='text-blue-800 lg:hidden xl:block'>{article.category}</Link>
