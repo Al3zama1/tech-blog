@@ -258,10 +258,10 @@ class AuthenticationControllerTest {
         @Test
         void refreshAccessToken_WithInvalidRefreshToken_ShouldReturn401Status() throws Exception {
             // Given
-            String refreshToken = "refresh-token";
-            MockCookie refreshTokenCookie = new MockCookie("refresh-token", refreshToken);
+            MockCookie refreshTokenCookie = new MockCookie("refresh-token", "refresh-token-value");
 
-            given(authenticationService.refreshAccessToken(refreshToken)).willThrow(new RefreshTokenException(ErrorMessages.INVALID_REFRESH_TOKEN + ": " + ErrorMessages.FAILED_TOKEN_DECODE));
+            given(authenticationService.refreshAccessToken(refreshTokenCookie.getValue()))
+                    .willThrow(new RefreshTokenException(ErrorMessages.FAILED_TOKEN_DECODE));
 
             // When
             mockMvc.perform(post("/api/v1/auth/refresh-access")
@@ -273,7 +273,7 @@ class AuthenticationControllerTest {
                     .andExpect(responseBody().containsErrorMessage(ErrorMessages.INVALID_REFRESH_TOKEN));
 
             // Then
-            then(authenticationService).should().refreshAccessToken(refreshToken);
+            then(authenticationService).should().refreshAccessToken(refreshTokenCookie.getValue());
         }
     }
 
