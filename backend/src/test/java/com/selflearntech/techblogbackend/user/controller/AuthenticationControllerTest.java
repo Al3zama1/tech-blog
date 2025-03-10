@@ -224,11 +224,10 @@ class AuthenticationControllerTest {
         @Test
         void refreshAccessToken_WithValidCookie_ShouldReturn200StatusWithNewAccessToken() throws Exception {
             // Given
-            String refreshToken = "refresh-token";
-            MockCookie refreshTokenCookie = new MockCookie("refresh-token", refreshToken);
+            MockCookie refreshTokenCookie = new MockCookie("refresh-token", "refresh-token-value");
             UserDTO responseUserDTO = UserMother.userDTO().build();
 
-            given(authenticationService.refreshAccessToken(refreshToken)).willReturn(responseUserDTO);
+            given(authenticationService.refreshAccessToken(refreshTokenCookie.getValue())).willReturn(responseUserDTO);
 
             // When
             mockMvc.perform(post("/api/v1/auth/refresh-access")
@@ -239,7 +238,7 @@ class AuthenticationControllerTest {
                     .andExpect(responseBody().containsObjectAsJson(responseUserDTO, UserDTO.class));
 
             // Then
-            then(authenticationService).should().refreshAccessToken(refreshToken);
+            then(authenticationService).should().refreshAccessToken(refreshTokenCookie.getValue());
         }
 
         @Test
