@@ -1,4 +1,4 @@
-package com.selflearntech.techblogbackend.user;
+package com.selflearntech.techblogbackend.utils;
 
 import com.selflearntech.techblogbackend.user.dto.AuthenticationRequestDTO;
 import com.selflearntech.techblogbackend.user.dto.AuthenticationResponseDTO;

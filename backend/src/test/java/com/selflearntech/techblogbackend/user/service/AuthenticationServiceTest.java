@@ -4,7 +4,7 @@ import com.selflearntech.techblogbackend.exception.*;
 import com.selflearntech.techblogbackend.token.model.Token;
 import com.selflearntech.techblogbackend.token.repository.TokenRepository;
 import com.selflearntech.techblogbackend.token.service.TokenService;
-import com.selflearntech.techblogbackend.user.UserMother;
+import com.selflearntech.techblogbackend.utils.UserMother;
 import com.selflearntech.techblogbackend.user.dto.AuthenticationRequestDTO;
 import com.selflearntech.techblogbackend.user.dto.RegistrationRequestDTO;
 import com.selflearntech.techblogbackend.user.mapper.UserMapper;

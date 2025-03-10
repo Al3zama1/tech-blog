@@ -3,7 +3,7 @@ package com.selflearntech.techblogbackend.user.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.selflearntech.techblogbackend.config.SecurityConfig;
 import com.selflearntech.techblogbackend.exception.*;
-import com.selflearntech.techblogbackend.user.UserMother;
+import com.selflearntech.techblogbackend.utils.UserMother;
 import com.selflearntech.techblogbackend.user.dto.AuthenticationRequestDTO;
 import com.selflearntech.techblogbackend.user.dto.AuthenticationResponseDTO;
 import com.selflearntech.techblogbackend.user.dto.UserDTO;

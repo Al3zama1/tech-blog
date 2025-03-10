@@ -1,6 +1,6 @@
 package com.selflearntech.techblogbackend.user.mapper;
 
-import com.selflearntech.techblogbackend.user.UserMother;
+import com.selflearntech.techblogbackend.utils.UserMother;
 import com.selflearntech.techblogbackend.user.dto.AuthenticationResponseDTO;
 import com.selflearntech.techblogbackend.user.dto.UserDTO;
 import com.selflearntech.techblogbackend.user.model.Role;
