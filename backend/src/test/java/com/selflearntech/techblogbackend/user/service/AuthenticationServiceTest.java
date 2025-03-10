@@ -4,6 +4,7 @@ import com.selflearntech.techblogbackend.exception.*;
 import com.selflearntech.techblogbackend.token.model.Token;
 import com.selflearntech.techblogbackend.token.repository.TokenRepository;
 import com.selflearntech.techblogbackend.token.service.TokenService;
+import com.selflearntech.techblogbackend.utils.TokenMother;
 import com.selflearntech.techblogbackend.utils.UserMother;
 import com.selflearntech.techblogbackend.user.dto.AuthenticationRequestDTO;
 import com.selflearntech.techblogbackend.user.dto.RegistrationRequestDTO;
@@ -221,11 +222,9 @@ class AuthenticationServiceTest {
 
             String refreshToken = "refresh-token";
             String accessToken = "access-token";
-            Token token = Token.builder()
-                    .id("refresh-token-id")
+            Token token = TokenMother.token()
                     .refreshToken(refreshToken)
                     .expireTime(refreshTokenExpiration)
-                    .isValid(true)
                     .user(UserMother.user().build())
                     .build();
 
