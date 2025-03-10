@@ -26,12 +26,13 @@ class UserMapperTest {
     @Test
     void toUserDTOFromUserAuthenticationResponseDTO() {
         // Given
-        UserAuthenticationResponseDTO authenticationResponse = UserMother.userAuthenticationResponsePayload().build();
+        UserAuthenticationResponseDTO authenticationResponse = UserMother.authenticationResponsePayload().build();
 
         // When
         UserDTO userDTO = cut.toUserDTO(authenticationResponse);
 
         // Then
+        assertThat(userDTO.getId()).isEqualTo(authenticationResponse.getId());
         assertThat(userDTO.getFirstName()).isEqualTo(authenticationResponse.getFirstName());
         assertThat(userDTO.getLastName()).isEqualTo(authenticationResponse.getLastName());
         assertThat(userDTO.getEmail()).isEqualTo(authenticationResponse.getEmail());
@@ -43,8 +44,7 @@ class UserMapperTest {
     @Test
     void toUserAuthenticationResponseDTOFromUserAndRefreshTokenAndAccessToken() {
         // Given
-        Role userRole = new Role("role-id", RoleType.USER);
-        User user = UserMother.user().authorities(Set.of(userRole)).build();
+        User user = UserMother.user().build();
         String accessToken = "access-token";
         String refreshToken = "refresh-token";
 
@@ -53,6 +53,7 @@ class UserMapperTest {
         Set<String> userRoles = cut.getRoles(user);
 
         // Then
+        assertThat(authenticationResponse.getId()).isEqualTo(user.getId());
         assertThat(authenticationResponse.getFirstName()).isEqualTo(user.getFirstName());
         assertThat(authenticationResponse.getLastName()).isEqualTo(user.getLastName());
         assertThat(authenticationResponse.getEmail()).isEqualTo(user.getEmail());
@@ -65,21 +66,19 @@ class UserMapperTest {
     @Test
     void toUserDTOFromUserAndAccessToken() {
         // Given
-        Role userRole = new Role("role-id", RoleType.USER);
-        User user = UserMother.user().authorities(Set.of(userRole)).build();
+        User user = UserMother.user().build();
         String accessToken = "access-token";
 
         // When
         UserDTO userDTO = cut.toUserDTO(user, accessToken);
-        Set<String> userRoles = cut.getRoles(user);
 
         // Then
         assertThat(userDTO.getFirstName()).isEqualTo(user.getFirstName());
         assertThat(userDTO.getLastName()).isEqualTo(user.getLastName());
         assertThat(userDTO.getEmail()).isEqualTo(user.getEmail());
         assertThat(userDTO.getProfileImg()).isEqualTo(user.getProfileImg());
-        assertThat(userDTO.getRoles()).isEqualTo(userRoles);
         assertThat(userDTO.getAccessToken()).isEqualTo(accessToken);
+        assertThat(userDTO.getRoles()).contains("USER");
     }
 
     @Test
@@ -87,7 +86,9 @@ class UserMapperTest {
         // Given
         Role userRole = new Role("role-1", RoleType.USER);
         Role adminRole = new Role("role-2", RoleType.ADMIN);
-        User user = UserMother.user().authorities(Set.of(userRole, adminRole)).build();
+        User user = UserMother.user()
+                .authorities(Set.of(userRole, adminRole))
+                .build();
 
         // When
         Set<String> userRoles = cut.getRoles(user);

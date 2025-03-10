@@ -68,7 +68,7 @@ class AuthenticationServiceTest {
         @Test
         void registerUser_WithValidData_ShouldCreateNewUser() {
             // Given
-            UserRegistrationRequestDTO registrationPayload = UserMother.userRegistrationPayload().build();
+            UserRegistrationRequestDTO registrationPayload = UserMother.registrationPayload().build();
             Role userRole = Role.builder().authority(RoleType.USER).build();
             String encodedPassword = "encoded-password";
 
@@ -92,7 +92,7 @@ class AuthenticationServiceTest {
         @Test
         void registerUser_WithNonMatchingPasswords_ShouldThrowBadRequestException() {
             // Given
-            UserRegistrationRequestDTO registrationPayload = UserMother.userRegistrationPayload()
+            UserRegistrationRequestDTO registrationPayload = UserMother.registrationPayload()
                     .password("c11l9u")
                     .build();
 
@@ -110,7 +110,7 @@ class AuthenticationServiceTest {
         @Test
         void registerUser_WithEmailAlreadyTaken_ShouldThrowUserExistsException() {
             // Given
-            UserRegistrationRequestDTO registrationPayload = UserMother.userRegistrationPayload().build();
+            UserRegistrationRequestDTO registrationPayload = UserMother.registrationPayload().build();
 
             given(userRepository.existsUserByEmail(registrationPayload.getEmail())).willReturn(true);
 
@@ -128,7 +128,7 @@ class AuthenticationServiceTest {
         @Test
         void registerUser_FailToAssignUserRole_ShouldThrowRoleAssignmentException() {
             // Given
-            UserRegistrationRequestDTO registrationPayload = UserMother.userRegistrationPayload().build();
+            UserRegistrationRequestDTO registrationPayload = UserMother.registrationPayload().build();
 
             given(userRepository.existsUserByEmail(registrationPayload.getEmail())).willReturn(false);
             given(roleRepository.findByAuthority(RoleType.USER)).willReturn(Optional.empty());

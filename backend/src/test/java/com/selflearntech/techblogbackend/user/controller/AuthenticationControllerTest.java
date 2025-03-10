@@ -53,7 +53,7 @@ class AuthenticationControllerTest {
         @Test
         void registerUser_WithValidData_ShouldReturn201Status() throws Exception {
             // Given
-            UserRegistrationRequestDTO registrationPayload = UserMother.userRegistrationPayload().build();
+            UserRegistrationRequestDTO registrationPayload = UserMother.registrationPayload().build();
 
             // When
             mockMvc.perform(post("/api/v1/auth/register")
@@ -68,7 +68,7 @@ class AuthenticationControllerTest {
         @Test
         void registerUser_WithValidDataButFailToAssignUserRole_ShouldReturn500Status() throws Exception {
             // Given
-            UserRegistrationRequestDTO registrationPayload = UserMother.userRegistrationPayload().build();
+            UserRegistrationRequestDTO registrationPayload = UserMother.registrationPayload().build();
 
             doThrow(new RoleAssignmentException(ErrorMessages.ROLE_ASSIGNMENT_FAILURE, RoleType.USER.name()))
                     .when(authenticationService).registerUser(registrationPayload);
@@ -86,7 +86,7 @@ class AuthenticationControllerTest {
         @Test
         void registerUser_WithInvalidEmailFormat_ShouldReturn400StatusWithInputValidationError() throws Exception {
             // Given
-            UserRegistrationRequestDTO registrationPayload = UserMother.userRegistrationPayload()
+            UserRegistrationRequestDTO registrationPayload = UserMother.registrationPayload()
                     .email("john.doe.com")
                     .build();
 
@@ -104,7 +104,7 @@ class AuthenticationControllerTest {
         @Test
         void registerUser_WithExistingEmail_ShouldReturn409StatusWithErrorMessage() throws Exception {
             // Given
-            UserRegistrationRequestDTO registrationPayload = UserMother.userRegistrationPayload().build();
+            UserRegistrationRequestDTO registrationPayload = UserMother.registrationPayload().build();
 
             doThrow(new UserExistsException(ErrorMessages.EMAIL_TAKEN)).when(authenticationService).registerUser(registrationPayload);
 
@@ -119,7 +119,7 @@ class AuthenticationControllerTest {
         @Test
         void registerUser_WithNonMatchingPasswords_ShouldReturn400StatusWithErrorMessage() throws Exception {
             // Given
-            UserRegistrationRequestDTO registrationPayload = UserMother.userRegistrationPayload()
+            UserRegistrationRequestDTO registrationPayload = UserMother.registrationPayload()
                     .password("C11l08a#0522")
                     .verifyPassword("C11l08a#0523")
                     .build();
@@ -143,7 +143,7 @@ class AuthenticationControllerTest {
         void authenticateUser_WithValidData_ShouldReturn200StatusWithUserDTO() throws Exception {
             // Given
             UserAuthenticationRequestDTO authenticationPayload = UserMother.userAuthenticationPayload().build();
-            UserAuthenticationResponseDTO authenticationResponse = UserMother.userAuthenticationResponsePayload().build();
+            UserAuthenticationResponseDTO authenticationResponse = UserMother.authenticationResponsePayload().build();
 
             given(authenticationService.authenticateUser(authenticationPayload.getEmail(), authenticationPayload.getPassword()))
                     .willReturn(authenticationResponse);

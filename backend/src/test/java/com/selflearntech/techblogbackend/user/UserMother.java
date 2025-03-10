@@ -4,13 +4,15 @@ import com.selflearntech.techblogbackend.user.dto.UserAuthenticationRequestDTO;
 import com.selflearntech.techblogbackend.user.dto.UserAuthenticationResponseDTO;
 import com.selflearntech.techblogbackend.user.dto.UserDTO;
 import com.selflearntech.techblogbackend.user.dto.UserRegistrationRequestDTO;
+import com.selflearntech.techblogbackend.user.model.Role;
+import com.selflearntech.techblogbackend.user.model.RoleType;
 import com.selflearntech.techblogbackend.user.model.User;
 
 import java.util.Set;
 
 public class UserMother {
 
-    public static UserRegistrationRequestDTO.UserRegistrationRequestDTOBuilder userRegistrationPayload() {
+    public static UserRegistrationRequestDTO.UserRegistrationRequestDTOBuilder registrationPayload() {
         return UserRegistrationRequestDTO.builder()
                 .firstName("John")
                 .lastName("Doe")
@@ -25,8 +27,9 @@ public class UserMother {
                 .password("C11l08a#05");
     }
 
-    public static UserAuthenticationResponseDTO.UserAuthenticationResponseDTOBuilder userAuthenticationResponsePayload() {
+    public static UserAuthenticationResponseDTO.UserAuthenticationResponseDTOBuilder authenticationResponsePayload() {
         return UserAuthenticationResponseDTO.builder()
+                .id("67983098a363fb3d06132a51")
                 .firstName("John")
                 .lastName("Doe")
                 .email("john.doe@gmail.com")
@@ -51,6 +54,7 @@ public class UserMother {
                 .id("64f57b8a18c4a1a5f9f8c671")
                 .firstName("John")
                 .lastName("Last")
+                .authorities(Set.of(new Role("role-id", RoleType.USER)))
                 .profileImg("")
                 .email("john.doe@gmail.com");
     }
