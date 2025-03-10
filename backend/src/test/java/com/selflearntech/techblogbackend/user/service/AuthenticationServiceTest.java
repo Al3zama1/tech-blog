@@ -261,7 +261,7 @@ class AuthenticationServiceTest {
                     .hasMessage(ErrorMessages.FAILED_TOKEN_VALIDATION);
 
             // Then
-            then(userRepository).shouldHaveNoInteractions();
+            then(tokenRepository).shouldHaveNoInteractions();
             then(tokenService).shouldHaveNoMoreInteractions();
             then(userMapper).shouldHaveNoInteractions();
         }
