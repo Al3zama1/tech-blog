@@ -12,6 +12,7 @@ public class ErrorMessages {
     public static final String INVALIDATED_REFRESH_TOKEN = "Invalidated refresh token";
     public static final String COOKIE_REFRESH_TOKEN_AND_DB_TOKEN_MISMATCH = "Cookie and db refresh tokens do not match";
     public static final String EXPIRED_REFRESH_TOKEN = "Expired refresh token";
+    public static final String REFRESH_TOKEN_EXPIRATION_DATE_MISMATCH = "Refresh token expiration dates do not match";
     public static final String FAILED_TOKEN_VALIDATION = "Failed token validation";
     public static final String STORED_TOKEN_AND_COOKIE_REFRESH_TOKEN_USER_MISMATCH = "Stored toke and cookie refresh token user mismatch";
     public static final String REFRESH_TOKEN_NOT_FOUND = "Refresh token not found";

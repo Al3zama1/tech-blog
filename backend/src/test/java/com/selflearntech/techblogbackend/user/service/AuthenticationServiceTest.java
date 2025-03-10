@@ -269,7 +269,6 @@ class AuthenticationServiceTest {
         @Test
         void refreshAccessToken_WithNonMatchingTokenId_ShouldThrowRefreshTokenException() {
             // Given
-
             String refreshToken = "refresh-token";
             String subject = "john.doe@gmail.com";
             Jwt jwt = Jwt.withTokenValue(refreshToken)
@@ -300,11 +299,9 @@ class AuthenticationServiceTest {
             Instant refreshTokenExpiration = fixedClock.instant().plus(7, ChronoUnit.DAYS);
 
             String refreshToken = "refresh-token";
-            Token token = Token.builder()
-                    .id("refresh-token-id")
+            Token token = TokenMother.token()
                     .refreshToken(refreshToken)
                     .expireTime(refreshTokenExpiration)
-                    .isValid(true)
                     .user(UserMother.user().build())
                     .build();
 
@@ -338,9 +335,7 @@ class AuthenticationServiceTest {
             Instant refreshTokenExpiration = fixedClock.instant().plus(7, ChronoUnit.DAYS);
 
             String refreshToken = "refresh-token";
-            String accessToken = "access-token";
-            Token token = Token.builder()
-                    .id("refresh-token-id")
+            Token token = TokenMother.token()
                     .refreshToken(refreshToken)
                     .expireTime(refreshTokenExpiration)
                     .isValid(false)
@@ -376,12 +371,9 @@ class AuthenticationServiceTest {
             Instant currentTime = fixedClock.instant();
             Instant refreshTokenExpiration = fixedClock.instant().plus(7, ChronoUnit.DAYS);
 
-            String refreshToken = "refresh-token";
-            Token token = Token.builder()
-                    .id("refresh-token-id")
-                    .refreshToken("different-refresh-token")
+            String refreshToken = "different-refresh-token";
+            Token token = TokenMother.token()
                     .expireTime(refreshTokenExpiration)
-                    .isValid(true)
                     .user(UserMother.user().build())
                     .build();
 
@@ -407,19 +399,53 @@ class AuthenticationServiceTest {
         }
 
         @Test
+        void refreshAccessToken_WithMisMatchingExpirationDates_ShouldThrowRefreshTokenException() {
+            // Given
+            LocalDateTime defaultLocalDateTime = LocalDateTime.of(2024, 12, 13, 12, 15);
+            Clock fixedClock = Clock.fixed(defaultLocalDateTime.toInstant(ZoneOffset.UTC), ZoneId.of("UTC"));
+            Instant currentTime = fixedClock.instant();
+            Instant refreshTokenExpiration = fixedClock.instant().minusSeconds(100);
+
+            String refreshToken = "refresh-token";
+            Token token = TokenMother.token()
+                    .refreshToken(refreshToken)
+                    .expireTime(refreshTokenExpiration)
+                    .user(UserMother.user().build())
+                    .build();
+
+            Jwt jwt = Jwt.withTokenValue(refreshToken)
+                    .expiresAt(refreshTokenExpiration.plus(7, ChronoUnit.DAYS))
+                    .subject(token.getUser().getEmail())
+                    .claim("id", token.getId())
+                    .header("alg", "SH252")
+                    .build();
+
+            given(tokenService.validateJWT(refreshToken)).willReturn(jwt);
+            given(tokenRepository.findById(token.getId())).willReturn(Optional.of(token));
+            given(clock.instant()).willReturn(currentTime);
+
+            // When
+            assertThatThrownBy(() -> cut.refreshAccessToken(refreshToken))
+                    .isInstanceOf(RefreshTokenException.class)
+                    .hasMessage(ErrorMessages.REFRESH_TOKEN_EXPIRATION_DATE_MISMATCH);
+
+            // Then
+            then(tokenService).shouldHaveNoMoreInteractions();
+            then(userMapper).shouldHaveNoInteractions();
+        }
+
+        @Test
         void refreshAccessToken_WithExpiredToken_ShouldThrowRefreshAccessTokenException() {
             // Given
             LocalDateTime defaultLocalDateTime = LocalDateTime.of(2024, 12, 13, 12, 15);
             Clock fixedClock = Clock.fixed(defaultLocalDateTime.toInstant(ZoneOffset.UTC), ZoneId.of("UTC"));
             Instant currentTime = fixedClock.instant();
-            Instant refreshTokenExpiration = fixedClock.instant().plus(7, ChronoUnit.DAYS);
+            Instant refreshTokenExpiration = fixedClock.instant().minusSeconds(100);
 
             String refreshToken = "refresh-token";
-            Token token = Token.builder()
-                    .id("refresh-token-id")
+            Token token = TokenMother.token()
                     .refreshToken(refreshToken)
-                    .expireTime(currentTime.minusSeconds(100))
-                    .isValid(true)
+                    .expireTime(refreshTokenExpiration)
                     .user(UserMother.user().build())
                     .build();
 

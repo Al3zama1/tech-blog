@@ -106,6 +106,7 @@ public class AuthenticationService implements IAuthenticationService{
         if (!storedRefreshToken.getUser().getEmail().equals(decodedJwt.getSubject())) throw new RefreshTokenException(ErrorMessages.STORED_TOKEN_AND_COOKIE_REFRESH_TOKEN_USER_MISMATCH);
         if (!storedRefreshToken.isValid()) throw new RefreshTokenException(ErrorMessages.INVALIDATED_REFRESH_TOKEN);
         if (!storedRefreshToken.getRefreshToken().equals(refreshToken)) throw new RefreshTokenException(ErrorMessages.COOKIE_REFRESH_TOKEN_AND_DB_TOKEN_MISMATCH);
+        if (!storedRefreshToken.getExpireTime().equals(decodedJwt.getExpiresAt())) throw new RefreshTokenException(ErrorMessages.REFRESH_TOKEN_EXPIRATION_DATE_MISMATCH);
         if (storedRefreshToken.getExpireTime().isBefore(now)) throw new RefreshTokenException(ErrorMessages.EXPIRED_REFRESH_TOKEN);
 
         String newAccessToken = tokenService.createAccessToken(storedRefreshToken.getUser());
