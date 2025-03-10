@@ -20,7 +20,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -260,7 +259,7 @@ class AuthenticationServiceTest {
             // When
             assertThatThrownBy(() -> cut.refreshAccessToken(refreshToken))
                     .isInstanceOf(RefreshTokenException.class)
-                    .hasMessage(ErrorMessages.FAILED_TOKEN_DECODE);
+                    .hasMessage(ErrorMessages.FAILED_TOKEN_VALIDATION);
 
             // Then
             then(userRepository).shouldHaveNoInteractions();

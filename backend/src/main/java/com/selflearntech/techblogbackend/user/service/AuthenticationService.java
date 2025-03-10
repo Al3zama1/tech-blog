@@ -96,7 +96,7 @@ public class AuthenticationService implements IAuthenticationService{
         try {
             decodedJwt = tokenService.validateJWT(refreshToken);
         } catch (JwtException ex) {
-            throw new RefreshTokenException(ErrorMessages.FAILED_TOKEN_DECODE);
+            throw new RefreshTokenException(ErrorMessages.FAILED_TOKEN_VALIDATION);
         }
 
         Token storedRefreshToken = tokenRepository.findById(decodedJwt.getClaim("id"))
