@@ -11,7 +11,7 @@ public class AuthorDTO {
     private String id;
     private String firstName;
     private String lastName;
-    private String introduction;
+    private String bio;
     private String profileImg;
     private String linkedInUrl;
     private String gitHubUrl;

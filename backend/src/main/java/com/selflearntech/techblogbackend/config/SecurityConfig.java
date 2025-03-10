@@ -49,7 +49,8 @@ public class SecurityConfig {
                     auth.requestMatchers(HttpMethod.GET, "/api/v1/articles/**").permitAll();
                     auth.requestMatchers(HttpMethod.PATCH, "/api/v1/articles/feature").hasRole("ADMIN");
                     auth.requestMatchers(HttpMethod.DELETE, "/api/v1/articles/**").hasRole("ADMIN");
-                    auth.requestMatchers("/api/v1/draft/**").hasAnyRole("EDITOR", "USER");
+//                    auth.requestMatchers("/api/v1/draft/**").hasAnyRole("EDITOR", "USER");
+                    auth.requestMatchers(HttpMethod.POST, "/api/v1/drafts").hasAnyRole("AUTHOR", "ADMIN");
                     auth.anyRequest().authenticated();
                 })
                 .oauth2ResourceServer(oauth -> oauth.jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())))

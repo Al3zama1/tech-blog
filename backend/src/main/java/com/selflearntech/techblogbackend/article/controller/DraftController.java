@@ -1,11 +1,8 @@
 package com.selflearntech.techblogbackend.article.controller;
 
+import com.selflearntech.techblogbackend.article.dto.CreateDraftRequestDTO;
 import com.selflearntech.techblogbackend.article.dto.DraftDTO;
-import com.selflearntech.techblogbackend.article.service.IArticleService;
 import com.selflearntech.techblogbackend.article.service.IDraftService;
-import io.imagekit.sdk.ImageKit;
-import io.imagekit.sdk.exceptions.*;
-import io.imagekit.sdk.models.results.Result;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
@@ -24,11 +21,11 @@ public class DraftController {
     private final IDraftService draftService;
 
     @PostMapping
-    public ResponseEntity<Void> createDraft(JwtAuthenticationToken authentication) {
-        String draftId = draftService.createDraft(authentication.getName());
+    public ResponseEntity<Void> createDraft(@Valid @RequestBody CreateDraftRequestDTO payload) {
+        String draftId = draftService.createDraft(payload.getAuthorId());
 
         return ResponseEntity
-                .created(URI.create("/api/v1/draft/" + draftId))
+                .created(URI.create("/api/v1/drafts/" + draftId))
                 .build();
     }
 

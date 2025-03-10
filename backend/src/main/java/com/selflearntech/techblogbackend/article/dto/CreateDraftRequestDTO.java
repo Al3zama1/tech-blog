@@ -1,15 +1,14 @@
 package com.selflearntech.techblogbackend.article.dto;
 
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
-
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class ArticlesPageDTO {
-    List<ArticlePageEntryDTO> articles;
-    boolean hasMorePages;
+public class CreateDraftRequestDTO {
+    @Size(min = 24, max = 24)
+    private String authorId;
 }

@@ -3,6 +3,7 @@ package com.selflearntech.techblogbackend.exception;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.lang.NonNull;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.validation.FieldError;
@@ -85,6 +86,13 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ResponseEntity<Object> handleMissingRequestCookieException(MissingRequestCookieException ex, WebRequest request) {
         return buildErrorResponse(ex, ErrorMessages.MISSING_REQUIRED_COOKIE, HttpStatus.BAD_REQUEST, request);
+    }
+
+
+    @Override
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    protected ResponseEntity<Object> handleHttpMessageNotReadable(HttpMessageNotReadableException ex, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
+        return buildErrorResponse(ex, ErrorMessages.MISSING_REQUEST_BODY, HttpStatus.BAD_REQUEST, request);
     }
 
     // handles all internal Spring Exceptions

@@ -1,13 +1,12 @@
 package com.selflearntech.techblogbackend.article.service;
 
 import com.selflearntech.techblogbackend.article.dto.ArticleDTO;
-import com.selflearntech.techblogbackend.article.dto.ArticlePageEntryDTO;
-import com.selflearntech.techblogbackend.article.dto.ArticlesPageDTO;
+import com.selflearntech.techblogbackend.article.dto.ArticlePreviewEntryDTO;
+import com.selflearntech.techblogbackend.article.dto.ArticlePreviewPageDTO;
 import com.selflearntech.techblogbackend.article.dto.AuthorDTO;
 import com.selflearntech.techblogbackend.article.mapper.ArticleMapper;
 import com.selflearntech.techblogbackend.article.mapper.AuthorMapper;
 import com.selflearntech.techblogbackend.article.model.Article;
-import com.selflearntech.techblogbackend.article.model.Draft;
 import com.selflearntech.techblogbackend.article.repository.ArticleRepository;
 import com.selflearntech.techblogbackend.article.repository.DraftRepository;
 import com.selflearntech.techblogbackend.exception.ErrorMessages;
@@ -24,7 +23,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Clock;
-import java.time.Instant;
 import java.util.List;
 
 @Service
@@ -49,7 +47,7 @@ public class ArticleService implements IArticleService{
     }
 
     @Override
-    public ArticlesPageDTO getFeaturedArticles(int page, int limit, String sortQuery) {
+    public ArticlePreviewPageDTO getFeaturedArticles(int page, int limit, String sortQuery) {
         Query query = Query.query(Criteria.where("isFeatured").is(true));
         query.with(PageRequest.of(page, limit, Sort.by(Sort.Direction.DESC, "createdAt")));
 
@@ -57,14 +55,14 @@ public class ArticleService implements IArticleService{
         long totalCount = mongoTemplate.count(Query.of(query).limit(-1).skip(-1), Article.class);
         boolean hasMorePages = ((page + 1) * limit) < totalCount;
 
-        List<ArticlePageEntryDTO> articlesDto = articles.stream().map(article -> articleMapper
+        List<ArticlePreviewEntryDTO> articlesDto = articles.stream().map(article -> articleMapper
                 .toArticlePreviewDTO(article, authorMapper.toAuthorDTO(article.getUser()))).toList();
 
-        return new ArticlesPageDTO(articlesDto, hasMorePages);
+        return new ArticlePreviewPageDTO(articlesDto, hasMorePages);
     }
 
     @Override
-    public ArticlesPageDTO getArticles(int page, int limit, String category, String sortQuery) {
+    public ArticlePreviewPageDTO getArticles(int page, int limit, String category, String sortQuery) {
         Query query = new Query();
 
         if (!category.isEmpty()) {
@@ -81,12 +79,12 @@ public class ArticleService implements IArticleService{
         boolean hasMorePages = ((page + 1) * limit) < totalCount;
 
 
-        List<ArticlePageEntryDTO> articlesDto = articles.stream().map(article -> {
+        List<ArticlePreviewEntryDTO> articlesDto = articles.stream().map(article -> {
             AuthorDTO authorDTO = authorMapper.toAuthorDTO(article.getUser());
             return articleMapper.toArticlePreviewDTO(article, authorDTO);
         }).toList();
 
-        return new ArticlesPageDTO(articlesDto, hasMorePages);
+        return new ArticlePreviewPageDTO(articlesDto, hasMorePages);
     }
 
 

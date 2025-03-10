@@ -4,7 +4,7 @@ import com.selflearntech.techblogbackend.article.dto.DraftDTO;
 
 public interface IDraftService {
 
-    String createDraft(String authorEmail);
+    String createDraft(String authorId);
     String publishDraft(String authorEmail, String draftId);
     String generateArticleSlug(String draftTitle);
     DraftDTO getDraft(String draftId);
