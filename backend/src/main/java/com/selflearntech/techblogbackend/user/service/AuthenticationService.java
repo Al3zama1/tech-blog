@@ -58,6 +58,7 @@ public class AuthenticationService implements IAuthenticationService{
                 .email(registerDTO.getEmail())
                 .authorities(Set.of(userRole))
                 .password(encodedPassword)
+                .createdAt(Instant.now(clock))
                 .build();
 
         newUser = userRepository.save(newUser);

@@ -201,7 +201,7 @@ class AuthenticationControllerTest {
         }
 
         @Test
-        void authenticateUserWithInvalidEmailFormat_ShouldReturn400StatusWithValidationError() throws Exception {
+        void authenticateUser_WithInvalidEmailFormat_ShouldReturn400StatusWithValidationError() throws Exception {
             // Given
             AuthenticationRequestDTO authenticationPayload = UserMother.authenticationPayload()
                     .email("john.doe.com")
