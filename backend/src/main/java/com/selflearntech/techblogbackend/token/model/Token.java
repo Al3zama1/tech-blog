@@ -24,5 +24,6 @@ public class Token {
     @NotNull
     private Instant expireTime;
     private boolean isValid;
+    @DBRef
     private User user;
 }

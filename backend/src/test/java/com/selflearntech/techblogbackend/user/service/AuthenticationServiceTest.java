@@ -165,28 +165,29 @@ class AuthenticationServiceTest {
             // Given
             AuthenticationRequestDTO authenticationPayload = UserMother.authenticationPayload().build();
             User authenticatedUser = UserMother.user().build();
-            UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(authenticatedUser, null);
+            UsernamePasswordAuthenticationToken authRequestToken = new UsernamePasswordAuthenticationToken(authenticationPayload.getEmail(), authenticationPayload.getPassword());
+            UsernamePasswordAuthenticationToken authResponseToken = new UsernamePasswordAuthenticationToken(authenticatedUser, null);
+
+            LocalDateTime defaultLocalDateTime = LocalDateTime.of(2024, 12, 13, 12, 15);
+            Clock fixedClock = Clock.fixed(defaultLocalDateTime.toInstant(ZoneOffset.UTC), ZoneId.of("UTC"));
+            Instant currentTime = fixedClock.instant();
 
             Token token = Token.builder().user(authenticatedUser).isValid(true).build();
             String accessToken = "access-token";
             String refreshToken = "refresh-token";
             String refreshTokenId = "refresh-token-id";
-
-            LocalDateTime defaultLocalDateTime = LocalDateTime.of(2024, 12, 13, 12, 15);
-            Clock fixedClock = Clock.fixed(defaultLocalDateTime.toInstant(ZoneOffset.UTC), ZoneId.of("UTC"));
-            Instant currentTime = fixedClock.instant();
             Instant refreshTokenExpiration = fixedClock.instant().plus(7, ChronoUnit.DAYS);
 
-
-            given(authenticationManager.authenticate(any(AbstractAuthenticationToken.class))).willReturn(authenticationToken);
+            given(authenticationManager.authenticate(authRequestToken)).willReturn(authResponseToken);
             given(tokenRepository.save(token)).willAnswer(invocation -> {
                 Token savedToken = invocation.getArgument(0, Token.class);
                 savedToken.setId(refreshTokenId);
                 return savedToken;
             });
+            given(tokenService.createAccessToken(authenticatedUser)).willReturn(accessToken);
             given(clock.instant()).willReturn(currentTime);
             given(tokenService.createRefreshToken(authenticatedUser.getEmail(), refreshTokenId, refreshTokenExpiration)).willReturn(refreshToken);
-            given(tokenService.createAccessToken(authenticatedUser)).willReturn(accessToken);
+
 
             // When
             cut.authenticateUser(authenticationPayload.getEmail(), authenticationPayload.getPassword());
