@@ -17,4 +17,5 @@ public class ErrorMessages {
     public static final String REFRESH_TOKEN_NOT_FOUND = "Refresh token not found";
     public static final String  ROLE_NOT_FOUND = "Role not found";
     public static final String NOT_FOUND = "Resource not found";
+    public static final String MISSING_REQUIRED_COOKIE = "Missing required cookie";
 }

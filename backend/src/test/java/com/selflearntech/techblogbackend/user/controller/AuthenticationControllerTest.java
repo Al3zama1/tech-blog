@@ -248,7 +248,8 @@ class AuthenticationControllerTest {
             // When
             mockMvc.perform(post("/api/v1/auth/refresh-access")
                     .contentType(MediaType.APPLICATION_JSON))
-                    .andExpect(status().isBadRequest());
+                    .andExpect(status().isBadRequest())
+                    .andExpect(responseBody().containsErrorMessage(ErrorMessages.MISSING_REQUIRED_COOKIE));
 
             // Then
             then(authenticationService).shouldHaveNoInteractions();
