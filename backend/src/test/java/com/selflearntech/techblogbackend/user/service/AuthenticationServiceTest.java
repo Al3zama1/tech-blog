@@ -121,7 +121,7 @@ class AuthenticationServiceTest {
         }
 
         @Test
-        void registerUser_WithEmailAlreadyTaken_ShouldThrowUserExistsException() {
+        void registerUser_WithEmailAlreadyTaken_ShouldThrowConflictException() {
             // Given
             RegistrationRequestDTO registrationPayload = UserMother.registrationPayload().build();
 
