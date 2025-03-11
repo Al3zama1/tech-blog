@@ -105,6 +105,31 @@ class DraftControllerTest {
             // Then
             then(draftService).should(never()).createDraft(any());
         }
+
+        @Test
+        void createDraft_Unauthenticated_ShouldReturn401StatusWithErrorMessage() throws Exception {
+            // Given
+
+            // When
+            mockMvc.perform(post("/api/v1/drafts"))
+                    .andExpect(status().isUnauthorized());
+
+            // Then
+            then(draftService).should(never()).createDraft(any());
+        }
+
+        @Test
+        @WithMockUser(roles = "USER")
+        void createDraft_Unauthorized_ShouldReturn403StatusWithErrorMessage() throws Exception {
+            // Given
+
+            // When
+            mockMvc.perform(post("/api/v1/drafts"))
+                    .andExpect(status().isForbidden());
+
+            // Then
+            then(draftService).should(never()).createDraft(any());
+        }
     }
 
     @Nested
