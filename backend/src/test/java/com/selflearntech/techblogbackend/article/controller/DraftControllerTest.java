@@ -42,8 +42,6 @@ class DraftControllerTest {
     @MockitoBean
     private IDraftService draftService;
 
-    private final static String DRAFT_ID = "67983098a363fb3d06132a51";
-
 
     @Nested
     public  class CreateDraft {
@@ -52,10 +50,10 @@ class DraftControllerTest {
         @WithMockUser(roles = "AUTHOR")
         void createDraft_WithAuthorIdIncluded_ShouldReturn2001StatusWithLocationHeader() throws Exception {
             // Given
+            String draftId = "67983098a363fb3d06132a51";
             String authorId = "67983098a363fb3d06132a11";
             CreateDraftRequestDTO payload = new CreateDraftRequestDTO(authorId);
-
-            given(draftService.createDraft(authorId)).willReturn(DRAFT_ID);
+            given(draftService.createDraft(authorId)).willReturn(draftId);
 
 
             // When
@@ -64,7 +62,7 @@ class DraftControllerTest {
                             .content(objectMapper.writeValueAsString(payload)))
                     .andExpect(status().isCreated())
                     .andExpect(header().exists("Location"))
-                    .andExpect(header().string("Location", String.format("/api/v1/drafts/%s", DRAFT_ID)));
+                    .andExpect(header().string("Location", String.format("/api/v1/drafts/%s", draftId)));
 
             // Then
             then(draftService).should().createDraft(authorId);
@@ -89,10 +87,11 @@ class DraftControllerTest {
         @WithMockUser(roles = "AUTHOR")
         void createDraft_WithInvalidAuthorId_ShouldReturn400StatusWithValidationErrorMessage() throws Exception {
             // Given
+            String draftId = "67983098a363fb3d06132a51";
             String authorId = "67983098a363fb3d06132a";
             CreateDraftRequestDTO payload = new CreateDraftRequestDTO(authorId);
 
-            given(draftService.createDraft(authorId)).willReturn(DRAFT_ID);
+            given(draftService.createDraft(authorId)).willReturn(draftId);
 
 
             // When
@@ -140,14 +139,15 @@ class DraftControllerTest {
         @WithMockUser(roles = "AUTHOR")
         void publishDraft_WithValidPayload_ShouldReturn201StatusWithLocationHeader() throws Exception {
             // Given
+            String draftId = "67983098a363fb3d06132a51";
             String authorId = "67983098a363fb3d06132a11";
             PublishDraftRequestDTO payload = new PublishDraftRequestDTO(authorId);
             String articleSlug = "spring-boot-exception-handling";
 
-            given(draftService.publishDraft(authorId, DRAFT_ID)).willReturn(articleSlug);
+            given(draftService.publishDraft(authorId, draftId)).willReturn(articleSlug);
 
             // When
-            mockMvc.perform(post("/api/v1/drafts/{draftId}", DRAFT_ID)
+            mockMvc.perform(post("/api/v1/drafts/{draftId}", draftId)
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(payload)))
                     .andExpect(status().isCreated())
@@ -156,16 +156,17 @@ class DraftControllerTest {
                     .andExpect(jsonPath("$.slug", is(articleSlug)));
 
             // Then
-            then(draftService).should().publishDraft(authorId, DRAFT_ID);
+            then(draftService).should().publishDraft(authorId, draftId);
         }
 
         @Test
         @WithMockUser(roles = "AUTHOR")
         void publishDraft_WithMissingRequestBody_ShouldReturn400StatusWithErrorMessage() throws Exception {
             // Given
+            String draftId = "67983098a363fb3d06132a51";
 
             // When
-            mockMvc.perform(post("/api/v1/drafts/{draftId}", DRAFT_ID)
+            mockMvc.perform(post("/api/v1/drafts/{draftId}", draftId)
                     .contentType(MediaType.APPLICATION_JSON))
                     .andExpect(status().isBadRequest())
                     .andExpect(responseBody().containsErrorMessage(ErrorMessages.MISSING_REQUEST_BODY));
@@ -178,11 +179,12 @@ class DraftControllerTest {
         @WithMockUser(roles = "AUTHOR")
         void publishDraft_WithInvalidAuthorId_ShouldReturn400StatusWithValidationErrorMessage() throws Exception {
             // Given
+            String draftId = "67983098a363fb3d06132a51";
             String authorId = "67983098a363fb3d06132a112323";
             PublishDraftRequestDTO payload = new PublishDraftRequestDTO(authorId);
 
             // When
-            mockMvc.perform(post("/api/v1/drafts/{draftId}", DRAFT_ID)
+            mockMvc.perform(post("/api/v1/drafts/{draftId}", draftId)
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(payload)))
                     .andExpect(status().isBadRequest())
@@ -193,11 +195,31 @@ class DraftControllerTest {
         }
 
         @Test
-        void publishDraft_Unauthenticated_ShouldReturn401StatusWithErrorMessage() throws Exception {
+        @WithMockUser(roles = "AUTHOR")
+        void publishDraft_WithInvalidDraftId_ShouldReturn400StatusWithValidationErrorMessage() throws Exception {
             // Given
+            String authorId = "67983098a363fb3d06132a11";
+            String draftId = "67983098a363fb3d06132a1123";
+            PublishDraftRequestDTO payload = new PublishDraftRequestDTO(authorId);
 
             // When
-            mockMvc.perform(post("/api/v1/drafts/{draftId}", DRAFT_ID))
+            mockMvc.perform(post("/api/v1/drafts/{draftId}", draftId)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(payload)))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(responseBody().containsValidationError("draftId", "Draft id must be 24 characters long"));
+
+            // Then
+            then(draftService).should(never()).publishDraft(any(), any());
+        }
+
+        @Test
+        void publishDraft_Unauthenticated_ShouldReturn401StatusWithErrorMessage() throws Exception {
+            // Given
+            String draftId = "67983098a363fb3d06132a51";
+
+            // When
+            mockMvc.perform(post("/api/v1/drafts/{draftId}", draftId))
                     .andExpect(status().isUnauthorized());
 
             // Then
@@ -208,9 +230,10 @@ class DraftControllerTest {
         @WithMockUser(roles = "USER")
         void publishDraft_Unauthorized_ShouldReturn403StatusWithErrorMessage() throws Exception {
             // Given
+            String draftId = "67983098a363fb3d06132a51";
 
             // When
-            mockMvc.perform(post("/api/v1/drafts/{draftId}", DRAFT_ID))
+            mockMvc.perform(post("/api/v1/drafts/{draftId}", draftId))
                     .andExpect(status().isForbidden());
 
             // Then
@@ -225,13 +248,14 @@ class DraftControllerTest {
         @WithMockUser(roles = "AUTHOR")
         void getDraft_WithDraftId_ShouldReturnDraft() throws Exception {
             // Given
+            String draftId = "67983098a363fb3d06132a51";
 
             // When
-            mockMvc.perform(get("/api/v1/drafts/{draftId}", DRAFT_ID))
+            mockMvc.perform(get("/api/v1/drafts/{draftId}", draftId))
                     .andExpect(status().isOk());
 
             // Then
-            then(draftService).should().getDraft(DRAFT_ID);
+            then(draftService).should().getDraft(draftId);
         }
 
         @Test
