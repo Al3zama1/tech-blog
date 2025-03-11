@@ -25,6 +25,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.never;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -214,6 +215,38 @@ class DraftControllerTest {
 
             // Then
             then(draftService).should(never()).publishDraft(any(), any());
+        }
+    }
+
+    @Nested
+    public class GetDraft {
+
+        @Test
+        @WithMockUser(roles = "AUTHOR")
+        void getDraft_WithDraftId_ShouldReturnDraft() throws Exception {
+            // Given
+
+            // When
+            mockMvc.perform(get("/api/v1/drafts/{draftId}", DRAFT_ID))
+                    .andExpect(status().isOk());
+
+            // Then
+            then(draftService).should().getDraft(DRAFT_ID);
+        }
+
+        @Test
+        @WithMockUser(roles = "AUTHOR")
+        void getDraft_WithInvalidDraftId_ShouldReturn400StatusWithErrorMessage() throws Exception {
+            // Given
+            String draftId = "67983098a363fb3d06132a511";
+
+            // When
+            mockMvc.perform(get("/api/v1/drafts/{draftId}", draftId))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(responseBody().containsValidationError("draftId", "Draft id must be 24 characters long"));
+
+            // Then
+            then(draftService).should(never()).getDraft(any());
         }
     }
 

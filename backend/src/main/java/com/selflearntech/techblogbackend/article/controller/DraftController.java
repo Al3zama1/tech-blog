@@ -43,7 +43,7 @@ public class DraftController {
     }
 
     @GetMapping("/{draftId}")
-    public DraftDTO getDraft(@NotBlank @PathVariable String draftId) {
+    public DraftDTO getDraft(@Size(min = 24, max = 24, message = "Draft id must be 24 characters long") @PathVariable String draftId) {
         return draftService.getDraft(draftId);
     }
 
